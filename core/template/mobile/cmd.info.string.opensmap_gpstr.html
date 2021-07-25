@@ -1,0 +1,50 @@
+<div style="width:180px;height:150px;" class="cmd cmd-widget #history# tooltips" data-type="info" data-subtype="string" data-cmd_id="#id#" data-cmd_uid="#uid#" data-version="#version#" data-eqLogic_id="#eqLogic_id#">
+  <!-- Fichiers Javascript -->
+  <link rel="stylesheet" href="plugins/gps_traker/3rdparty/leaflet_v1.7.1/leaflet.css" />
+  <style type="text/css">
+    #macarte_gps{ height:130px; }
+  </style>
+  <script src="plugins/gps_traker/3rdparty/leaflet_v1.7.1/leaflet.js"></script>
+  <div id="macarte_gps">
+    <!-- Ici s'affichera la carte -->
+	</div>
+  <!-- Fichiers Javascript -->
+	<script type="text/javascript">
+    jeedom.cmd.update['#id#'] = function(_options) {
+      console.log("[jeedom.cmd.update map]: " + _options.display_value);
+      // Position GPS de la voiture
+      hist = _options.display_value;    
+      gps_pos = hist.split(',');
+      var lat = gps_pos[0];
+      var lon = gps_pos[1];
+      var vin = gps_pos[2];
+      // Fonction d'initialisation de la carte
+      function initMap_gps_trk() {
+          console.log("[jeedom.cmd.update map]: Init map");
+          // Créer l'objet "macarte_gps" et l'insèrer dans l'élément HTML qui a l'ID "map"
+          carte_gps_trk = L.map('macarte_gps',{zoomControl: false}).setView([lat, lon], 16);
+          // Leaflet ne récupère pas les cartes (tiles) sur un serveur par défaut. Nous devons lui préciser où nous souhaitons les récupérer. Ici, openstreetmap.fr
+          L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+              // Il est toujours bien de laisser le lien vers la source des données
+              //attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
+              attribution: 'OpenStreetMap',
+              minZoom: 2,
+              maxZoom: 20
+          }).addTo(carte_gps_trk);
+      }
+      if (carte_gps_trk == null)
+        initMap_gps_trk();
+      if (marker_gps_trk != null)
+        carte_gps_trk.removeLayer(marker_gps_trk);
+      marker_gps_trk = L.marker([lat, lon]).addTo(carte_gps_trk);
+      carte_gps_trk.on('click', ClicOnMap);
+      function ClicOnMap(){
+          $('#md_modal').dialog({title: "Vue carte"}).load('index.php?v=d&plugin=gps_traker&modal=modal.view_map&vin='+vin).dialog('open');
+      }
+    }
+    var carte_gps_trk = null;
+    var marker_gps_trk = null;
+	  jeedom.cmd.update['#id#']({display_value:'#state#',valueDate:'#valueDate#',collectDate:'#collectDate#',alertLevel:'#alertLevel#'});
+  </script>
+
+</div>

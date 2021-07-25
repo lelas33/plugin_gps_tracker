@@ -1,0 +1,49 @@
+<div class="cmd cmd-widget" data-type="action" data-subtype="slider" data-template="button" data-cmd_id="#id#" data-cmd_uid="#uid#" data-version="#version#" data-eqLogic_id="#eqLogic_id#">
+  <div class="title #hide_name#">
+    <div class="cmdName">#name_display#</div>
+  </div>
+  <div class="content-sm ">
+    <div class="picture">
+    </div>
+  </div>
+  <script>
+
+    $('.cmd[data-cmd_id=#id#] .picture').on('click', function () {
+      var imei_str = '#listValue#';
+      var imei_sta1 = imei_str.indexOf('"IMEI" selected>');
+      var imei_sta2 = imei_str.indexOf('"IMEI">');
+      var imei = "";
+      if (imei_sta1 != -1) {
+        imei = imei_str.substring(imei_sta1+15,imei_sta1+15+10);
+      }
+      else if (imei_sta2 != -1) {
+        imei = imei_str.substring(imei_sta2+7,imei_sta2+7+10);
+      }
+      if (imei != "") {
+        var urlcourante = document.location.href;
+        urlcourante = urlcourante.replace(/\/$/, "");
+        index_end_root = urlcourante.lastIndexOf( "/" );
+        url_root = urlcourante.substring(0, index_end_root);
+        window.location = url_root+"/index.php?v=d&m=gps_traker&p=panel&car="+imei;
+      }
+    });
+    jeedom.cmd.update['#id#'] = function(_options){
+      var img_fn = "/img.png";
+      var imei_str = '#listValue#';
+      var imei_sta1 = imei_str.indexOf('"IMEI" selected>');
+      var imei_sta2 = imei_str.indexOf('"IMEI">');
+      var imei = "";
+      if (imei_sta1 != -1) {
+        imei = imei_str.substring(imei_sta1+15,imei_sta1+15+10);
+      }
+      else if (imei_sta2 != -1) {
+        imei = imei_str.substring(imei_sta2+7,imei_sta2+7+10);
+      }
+      if (imei != "") {
+        var img_path = '<img src="plugins/gps_traker/data/' + imei + img_fn + '" style="max-height:150px;max-width:250px;height:auto;width:auto;"/>';
+        $('.cmd[data-cmd_id=#id#] .picture').empty().append(img_path);
+      }
+    }
+    jeedom.cmd.update['#id#']({display_value:'#state#'});
+  </script>
+</div>

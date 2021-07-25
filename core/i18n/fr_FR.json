@@ -1,0 +1,57 @@
+{
+    "plugins\/peugeotcars\/plugin_info\/configuration.php": {
+        "401 - Accès non autorisé": "401 - Accès non autorisé",
+        "Compte peugeotcars": "Compte peugeotcars",
+        "Password peugeotcars": "Password peugeotcars"
+    },
+    "plugins\/peugeotcars\/desktop\/php\/peugeotcars.php": {
+        "401 - Accès non autorisé": "401 - Accès non autorisé",
+        "Detecter": "Detecter",
+        "Gestion": "Gestion",
+        "Configuration": "Configuration",
+        "Mes equipements": "Mes equipements",
+        "Ajouter": "Ajouter",
+        "Vous n'avez pas encore de peugeotcars, cliquez sur Detecter un équipement pour commencer": "Vous n'avez pas encore de peugeotcars, cliquez sur Detecter un équipement pour commencer",
+        "Sauvegarder": "Sauvegarder",
+        "Supprimer": "Supprimer",
+        "Configuration avancée": "Configuration avancée",
+        "Equipement": "Equipement",
+        "Commandes": "Commandes",
+        "Général": "Général",
+        "Identifiant de l'équipement": "Identifiant de l'équipement",
+        "Nom de l'équipement": "Nom de l'équipement",
+        "Nom de la peugeotcars": "Nom de la peugeotcars",
+        "Objet parent": "Objet parent",
+        "Aucun": "Aucun",
+        "Catégorie": "Catégorie",
+        "Activer": "Activer",
+        "Visible": "Visible",
+        "Nom": "Nom",
+        "Sous-Type": "Sous-Type",
+        "Paramètres": "Paramètres"
+    },
+    "plugins\/peugeotcars\/desktop\/js\/peugeotcars.js": {
+        "Nom": "Nom",
+        "Historiser": "Historiser",
+        "Afficher": "Afficher",
+        "Inverser": "Inverser",
+        "Correction Min\t Auto": "Correction Min\t Auto",
+        "Correction Max Auto": "Correction Max Auto",
+        "Min": "Min",
+        "Max": "Max",
+        "Tester": "Tester"
+    },
+    "plugins\/peugeotcars\/core\/ajax\/peugeotcars.ajax.php": {
+        "401 - Accès non autorisé": "401 - Accès non autorisé",
+        "Aucune methode correspondante à : ": "Aucune methode correspondante à : "
+    },
+    "plugins\/peugeotcars\/core\/class\/peugeotcars.class.php": {
+        "Démarrer": "Démarrer",
+        "Arrêter": "Arrêter",
+        "Ranger": "Ranger",
+        "Inconnue": "Inconnue"
+    },
+    "plugins\/peugeotcars\/core\/api\/peugeotcars.api.php": {
+        "Aucune methode correspondante à : ": "Aucune methode correspondante à : "
+    }
+}

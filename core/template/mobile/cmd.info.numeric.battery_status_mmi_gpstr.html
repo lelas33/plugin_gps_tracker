@@ -1,0 +1,143 @@
+<!--
+  Widget name : battery_status_percentage_mmi
+  Author : geqr
+  Website : www.ma-maison-intelligente.fr
+  Tutorial : http://ma-maison-intelligente.fr/2020/04/widget-batterie-pour-votre-design-jeedom/
+  Inspiration : https://codepen.io/dropside/pen/qjDmb
+  Last Update : 20200414 - creation
+ -->
+
+<div class="cmd cmd-widget #history#" data-type="info" data-subtype="numeric" data-template="badge" data-cmd_id="#id#" data-cmd_uid="#uid#" data-version="#version#" data-eqLogic_id="#eqLogic_id#">
+  <div class="title #hide_name#">
+    <div class="cmdName">#name_display#</div>
+  </div>
+  <div style="min-height:12px;">
+  </div>
+  <div class="widget-container_gpstr">
+    <div class="battery_gpstr">
+         <div class="juice_gpstr"></div>
+    </div>
+    <div class="battery-level_gpstr">100%</div>
+  </div>
+</div>
+
+<style>
+  :root {
+      --juice_alert_color: red;
+      --juice_inter_color: orange;
+      --juice_ok_color:green;
+      --battery_color:grey;
+      --battery_level_color:grey;
+      --widget_width_gpstr:60px;
+	    --widget_height_gpstr:20px;
+      --font-size_gpstr:10px;
+    }
+
+  .widget-container_gpstr{
+  	width: calc(var(--widget_width_gpstr) + 20px);
+    display:block;
+    padding:0px;
+    position:relative;
+  }
+    
+  .battery_gpstr{
+    width: var(--widget_width_gpstr);
+    height: var(--widget_height_gpstr);
+    border: 2px solid var(--battery_color);
+    border-radius: 5px;
+    padding: 4px;
+    box-sizing: border-box;
+  }
+  .battery_gpstr:after{
+    content: ' ';
+    background: var(--battery_color);
+    width: 5px;
+    height: calc(var(--widget_height_gpstr) /2);
+    position: absolute;
+    right: 5px;
+    border-radius: 0px 2px 2px 0px;
+    top: 24%;
+  }
+  .battery-level_gpstr{
+	position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    font-size: var(--font-size_gpstr);
+    height: 100%;
+    vertical-align: middle;
+    line-height: var(--widget_height_gpstr);
+    text-align: center;
+    color: var(--battery_color);
+  }
+  .juice_gpstr{
+    height:100%;
+    float: left;
+  }
+
+  .juice-alert_gpstr {
+    background:var(--juice_alert_color);
+    animation: blinky 1s ease-in-out infinite;
+    animation-delay: 2s;
+  }
+
+  .juice-inter_gpstr {
+    background:var(--juice_inter_color);
+  }
+
+  .juice-ok_gpstr {
+    background:var(--juice_ok_color);
+  }
+
+  @keyframes blinky {
+    0% {background:transparent;}
+    49% {background:transparent;}
+    50% {background:var(--juice_alert_color);}
+  }
+</style>
+<script>
+  
+  
+  function getOpositeColor(rgb,darkcolor,lightcolor) { // Like this : rgb(0, 0, 0);
+    while (rgb.indexOf(' ') != -1) rgb = rgb.replace(' ', '');
+    //Check if is formatted as RGB
+    if ((x = /([0-9]{0,3}),([0-9]{0,3}),([0-9]{0,3})/.exec(rgb))) {
+        //Extract colors
+        color = {
+            'r': parseInt(x[1]),
+            'g': parseInt(x[2]),
+            'b': parseInt(x[3])
+        };
+        //If is this operation be <= 128 return white, others else return black
+        OpositeColor = ((0.3 * (color['r'])) + (0.59 * (color['g'])) + (0.11 * (color['b'])) <= 128) ? lightcolor : darkcolor;
+        return OpositeColor;
+    }
+    return -1;
+ }
+  
+  jeedom.cmd.update['#id#'] = function(_options) {
+    var cmd = $('.cmd[data-cmd_id=#id#]');
+    var percentage_value = _options.display_value;
+    
+    cmd.find('.juice_gpstr').attr('style', 'width:' + (percentage_value == 0 ? '5' : percentage_value) + '%;');
+    cmd.find('.battery-level_gpstr').html(percentage_value+"%");
+    if (percentage_value >=0 && percentage_value<=20){
+    	cmd.find('.juice_gpstr').removeClass('juice-ok_gpstr juice-inter_gpstr');
+      	cmd.find('.juice_gpstr').addClass('juice-alert_gpstr');
+        cmd.find('.battery-level_gpstr').css('color',cmd.find('.battery_gpstr').css("border-color"));
+    } else if (percentage_value >=21 && percentage_value<=59){
+      	cmd.find('.juice_gpstr').removeClass('juice-ok_gpstr juice-alert_gpstr');
+      	cmd.find('.juice_gpstr').addClass('juice-inter_gpstr');
+        cmd.find('.battery-level_gpstr').css('color',getOpositeColor(cmd.find('.juice_gpstr').css("background-color"),cmd.find('.battery_gpstr').css("border-color"),"#FFF"));
+    } else {
+    	cmd.find('.juice_gpstr').removeClass('juice-inter_gpstr juice-alert_gpstr');
+      	cmd.find('.juice_gpstr').addClass('juice-ok_gpstr');
+        cmd.find('.battery-level_gpstr').css('color',getOpositeColor(cmd.find('.juice_gpstr').css("background-color"),cmd.find('.battery_gpstr').css("border-color"),"#FFF"));
+    }
+    
+    
+    
+  }
+  
+  jeedom.cmd.update['#id#']({display_value:'#state#',valueDate:'#valueDate#',collectDate:'#collectDate#',alertLevel:'#alertLevel#'});
+</script>
