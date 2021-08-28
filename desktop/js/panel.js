@@ -139,7 +139,7 @@ function loadData(){
         url: 'plugins/gps_traker/core/ajax/gps_traker.ajax.php',
         data: {
             action: 'getTripData',
-            eqLogic_id: globalEqLogic,  // imei du traceur
+            eq_id: globalEqLogic,  // id de l'équipement traceur
             param: param
         },
         dataType: 'json',
@@ -559,7 +559,7 @@ function loadStats(){
         url: 'plugins/gps_traker/core/ajax/gps_traker.ajax.php',
         data: {
             action: 'getTripStats',
-            eqLogic_id: globalEqLogic,  // VIN du vehicule
+            eq_id: globalEqLogic,  // id de l'équipement traceur
             param: param
         },
         dataType: 'json',
@@ -678,7 +678,7 @@ function set_mileage(){
         url: 'plugins/gps_traker/core/ajax/gps_traker.ajax.php',
         data: {
             action: 'setMileage',
-            eqLogic_id: globalEqLogic,  // imei du traceur
+            eq_id: globalEqLogic,  // id de l'équipement traceur
             param: param
         },
         dataType: 'json',

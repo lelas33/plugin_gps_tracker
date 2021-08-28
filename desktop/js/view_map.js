@@ -20,14 +20,14 @@
 var gps_macarte = null;
 var marker_veh = null;
 var marker_home = null;
-var imei = "";
+var eq_id = "";
 
 // Fonctions realisées au chargement de la page: charger les données sur la période par défaut,
 // et afficher les infos correspondantes
 // ============================================================================================
 $(document).ready(function() {
-  imei = $('#veh_imei').val();
-  console.log("IMEI:"+imei);
+  eq_id = $('#veh_eq_id').val();
+  console.log("eq_id:"+eq_id);
   get_current_position();
 });
 
@@ -76,14 +76,14 @@ function updateMap(lat_veh, lon_veh) {
 // capturer les donnees depuis le serveur
 // ======================================
 function get_current_position(){
-    if (imei == "")
+    if (eq_id == "")
       return;
     $.ajax({
         type: 'POST',
         url: 'plugins/gps_traker/core/ajax/gps_traker.ajax.php',
         data: {
             action: 'getCurrentPosition',
-            eqLogic_id: imei   // imei du traceur GPS
+            eq_id: eq_id   // identifiant du plugin lie au traceur GPS
         },
         dataType: 'json',
         error: function (request, status, error) {
@@ -91,7 +91,7 @@ function get_current_position(){
             handleAjaxError(request, status, error);
         },
         success: function (data) {
-            console.log("[get_current_position] Objet gps_traker récupéré : " + imei);
+            console.log("[get_current_position] Objet gps_traker récupéré : " + eq_id);
             if (data.state != 'ok') {
                 $('#div_alert').showAlert({message: data.result, level: 'danger'});
                 return;

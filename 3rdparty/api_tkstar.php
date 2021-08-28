@@ -197,10 +197,10 @@ class api_tkstar {
       $ret_array["result"] = json_decode($data);
       // log::add('gps_traker','debug',"tkstar_api_getdata:json:".$data);
       // For trace analysis
-      $fn_log_sts = "/var/www/html/plugins/gps_traker/data/traker_log.txt";
-      $date = date("Y-m-d H:i:s");
-      $log_dt = $date." => ".$data."\n";
-      file_put_contents($fn_log_sts, $log_dt, FILE_APPEND | LOCK_EX);
+      // $fn_log_sts = "/var/www/html/plugins/gps_traker/data/traker_log.txt";
+      // $date = date("Y-m-d H:i:s");
+      // $log_dt = $date." => ".$data."\n";
+      // file_put_contents($fn_log_sts, $log_dt, FILE_APPEND | LOCK_EX);
       // end trace analysis
     }
     else

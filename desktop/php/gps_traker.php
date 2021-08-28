@@ -65,13 +65,16 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <label class="col-lg-2 control-label">{{Nom de l'équipement}}</label>
                             <div class="col-lg-3">
                                 <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
-                                <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="{{Nom de la voiture}}"/>
+                                <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="{{Nom de l'objet suivi}}"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-lg-2 control-label">{{Numéro IMEI / ID}}</label>
+                            <label class="col-lg-2 control-label">{{Type de traceur GPS}}</label>
                             <div class="col-lg-3">
-                                <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" placeholder="{{VIN du véhicule}}"/>
+                              <select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="type_traker">
+                                  <option value="TKS">{{Traceur TKSTAR TK905}}</option>
+                                  <option value="JCN">{{Application JeedomConnect}}</option>
+                              </select>
                             </div>
                         </div>
                         <div class="form-group">
@@ -108,6 +111,59 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <label class="col-lg-2 control-label" >{{Visible}}</label>
                             <div class="col-lg-1">
                                 <input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label"></label>
+                            <label class="col-lg-3"><br>{{Image de l'objet suivi}}</label>
+                        </div>
+                        <div class="form-group load_image">
+                            <label class="col-lg-2 control-label"></label>
+                            <div class="col-lg-3">
+                              <span class="input-group-btn">
+                                <input type="file" accept="image/png" id="load_image_input" style="display:none;" >
+                                <a class="btn btn-primary" id="load_image_conf"><i class="fa fa-cloud-upload-alt"></i> {{Fichier Image}}</a>
+                              </span>
+                            </div>
+                            <div class="col-lg-3">
+                              <img class="pull-left" id="object_img" src="" style="max-height:250px;max-width:350px;height:auto;width:auto;"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label"></label>
+                            <label class="col-lg-3"><br>{{Informations complémentaires pour le traceur TKSTAR}}</label>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">{{Numéro IMEI / ID}}</label>
+                            <div class="col-lg-3">
+                                <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="tkstar_imei" placeholder="{{numéro IMEI du traceur}}"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">{{Login compte Tkstar}}</label>
+                            <div class="col-lg-3">
+                                <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="tkstar_account" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">{{Password compte Tkstar}}</label>
+                            <div class="col-lg-3">
+                                <input type="password" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="tkstar_password" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label"></label>
+                            <label class="col-lg-3"><br>{{Informations complémentaires pour le traceur JeedomConnect}}</label>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">{{Téléphone suivi}}</label>
+                            <div class="col-lg-3">
+                              <div class="input-group">
+                                <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_jc_position"/>
+                                <span class="input-group-btn">
+                                  <a class="btn btn-default listCmdInfoOther roundedRight"><i class="fas fa-list-alt"></i></a>
+                                </span>
+                              </div>
                             </div>
                         </div>
                     </fieldset>

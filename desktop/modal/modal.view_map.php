@@ -25,11 +25,12 @@ include_file('3rdparty', 'easy-button/easy-button', 'css', 'gps_traker');
 
 $plugin = plugin::byId('gps_traker');
 $eqLogics = eqLogic::byType($plugin->getId());
-$imei = $_GET["imei"];
+$eq_id = $_GET["eq_id"];
+
 ?>
   <div id="trips_map">
   </div>
-  <input type="hidden" id="veh_imei"  value=<?php echo($imei); ?> />
+  <input type="hidden" id="veh_eq_id"  value=<?php echo($eq_id); ?> />
 <?php 
 include_file('desktop', 'view_map', 'js', 'gps_traker');
 ?>

@@ -11,6 +11,80 @@ $(".listCmdInfoNumeric").on('click', function () {
     el.closest('.input-group').find('input').value(result.human);
   });
 });
+$(".listCmdInfoOther").on('click', function () {
+  var el = $(this);
+  jeedom.cmd.getSelectModal({cmd: {type: 'info',subType : 'string'}}, function (result) {
+    el.closest('.input-group').find('input').value(result.human);
+  });
+});
+
+// Chargement image de l'objet suivi
+$('.load_image').off('click', '#load_image_conf').on('click', '#load_image_conf', function() {
+  // alert("Click load_image_conf");
+  $("#load_image_input").click();
+});
+
+$('.load_image').off('change', '#load_image_input').on('change', '#load_image_input', function() {
+  var files = document.getElementById('load_image_input').files;
+  if (files.length <= 0) {
+      return false;
+  }
+  console.log(files[0]);
+  const formData = new FormData();
+  formData.append("file", files[0]);
+
+  $.ajax({
+    type: "POST",
+    url: 'plugins/gps_traker/core/ajax/gps_traker_upload.ajax.php',
+    data: formData,
+    success: function (data) {
+       console.log(data);
+    },
+    cache: false,
+    contentType: false,
+    processData: false
+  });
+
+
+});
+
+// Lorsque le document est chargé
+$('.eqLogicAttr[data-l1key=id]').change(function() {
+  // recuperation de l'ID du eqlogic en cours
+  var eq_id = $('.eqLogicAttr[data-l1key=id]').value();
+  if (eq_id == "") {
+    return;
+  }
+  // alert ("eq_id ="+eq_id);
+
+  // Interrogation du serveur pour avoir le nom et chemin du fichier image de l'objet suivi
+  $.ajax({
+      type: 'POST',
+      url: 'plugins/gps_traker/core/ajax/gps_traker.ajax.php',
+      data: {
+          action: 'getImagePath',
+          eq_id: eq_id,  // Id de l'objet eqlogic
+      },
+      dataType: 'json',
+      error: function (request, status, error) {
+          alert("loadData:Error"+status+"/"+error);
+          handleAjaxError(request, status, error);
+      },
+      success: function (data) {
+          console.log("[loadData] Objet gps_traker récupéré : " + eq_id);
+          if (data.state != 'ok') {
+              $('#div_alert').showAlert({message: data.result, level: 'danger'});
+              return;
+          }
+          // alert("Retour:data nb="+data.result);
+          $("#object_img").attr("src", data.result);
+          
+      }
+  });
+
+});
+
+
 
 function addCmdToTable(_cmd) {
    if (!isset(_cmd)) {
