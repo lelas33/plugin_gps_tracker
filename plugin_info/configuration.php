@@ -22,12 +22,4 @@ if (!isConnect('admin')) {
 }
 ?>
 
-<form class="form-horizontal" id="config">
-    <div class="form-group">
-        <label class="col-lg-4 control-label">{{Spare}}</label>
-        <div class="col-lg-3">
-            <input class="configKey form-control" data-l1key="spare"/>
-        </div>
-    </div>
-</form>
 <?php include_file('desktop', 'gps_traker', 'js', 'gps_traker'); ?>

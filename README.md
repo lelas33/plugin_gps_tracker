@@ -1,4 +1,4 @@
-# plugin-PeugeotCars
+# plugin-GPS_Traker
 
 ## Fonctions
 
@@ -17,7 +17,7 @@ Les informations disponibles dans le widgets sont:
 
 
 <p align="left">
-  <img src="../master/doc/images/widget.png" height="500" title="Widget dashboard">
+  <img src="../master/doc/images/widget.png" height="400" title="Widget dashboard">
 </p>
 
 
