@@ -23,7 +23,8 @@ var car_trips = [];
 var car_gps   = [];
 var sel_trip_pts = [];
 var sel_trip_dist = [];
-var sel_trip_alti = [];
+var sel_trip_alt = [];
+var sel_trip_spd = [];
 var trip_polyline = [];
 var gps_macarte = null;
 var gps_pts_nb = 0;
@@ -328,6 +329,7 @@ function trip_list () {
         $(this).addClass('selected');
         display_trips(line);
         trip_alti();
+        trip_speed();
       }
   } );
   
@@ -419,37 +421,46 @@ function display_trips(number) {
   trip_polyline = [];
   var trip_table = [];
   var trip = [];
-  var trip_alti = [];
+  var trip_alt = [];
+  var trip_spd = [];
   var trip_dist = [];
+  var sum_alt, sum_spd;
   for (trip_id=0; trip_id<trips_nb; trip_id++) {
     // extract trip infos
     tmp = car_trips[trip_id].split(',');
     trip_ts_sta   = parseInt  (tmp[0],10);  // trip Timestamp start
     trip_ts_end   = parseInt  (tmp[1],10);  // trip Timestamp end
     trip_distance = parseFloat(tmp[2]);     // trip distance
-    trip_batt     = parseFloat(tmp[3]);     // trip battery level usage
     trip = [];
-    trip_alti = [];
+    trip_alt = [];
+    trip_spd = [];
     trip_dist = [];
+    sum_alt = 0;
+    sum_spd = 0;
     for (pts=0; pts<gps_nb; pts++) {
       // extract gps pts infos
       tmp = car_gps[pts].split(',');
       pts_ts   = parseInt  (tmp[0],10);  // Timestamp
       pts_lat  = parseFloat(tmp[1]);     // Lat
       pts_lon  = parseFloat(tmp[2]);     // Lon
-      pts_spd  = parseFloat(tmp[3]);     // vitesse
-      mileage     = parseFloat(tmp[4]);     // mileage
-      moving      = parseInt(tmp[5],10);    // kinetic
+      pts_alt  = parseFloat(tmp[3]);     // vitesse
+      pts_spd  = parseFloat(tmp[4]);     // vitesse
+      mileage     = parseFloat(tmp[5]);     // mileage
+      moving      = parseInt(tmp[6],10);    // kinetic
       if ((pts_ts>=trip_ts_sta) && (pts_ts<=trip_ts_end)) {
         trip.push([pts_lat, pts_lon]);
-        trip_alti.push(pts_spd);
+        trip_alt.push(pts_alt);
+        trip_spd.push(pts_spd);
         trip_dist.push(mileage);
+        sum_alt += pts_alt;
+        sum_spd += pts_spd;
       }
     }
     if ((number == -1) || (number == trip_id))
       trip_table.push(trip);
     if (((number == -1)&&(trip_id==0)) || (number == trip_id)) {
-      sel_trip_alti = trip_alti;
+      sel_trip_alt = (sum_alt >0)? trip_alt:[];
+      sel_trip_spd = (sum_spd >0)? trip_spd:[];
       sel_trip_dist = trip_dist;
       sel_trip_pts  = trip;
     }
@@ -469,6 +480,93 @@ function display_trips(number) {
 
 // Génération du graphe de relief pour le trajet selectionne
 // =========================================================
+var alti_dt_serie = [[]];
+Highcharts.addEvent(Highcharts.Point, 'click', function () {
+  var dist = this.x;
+  // recherche index de cette distance
+  var posi = -1;
+  var trouve = false;
+  for (id=0; id<alti_dt_serie.length; id++) {
+    cdist = alti_dt_serie[id][0];
+    if (dist == cdist) {
+      trouve = true;
+      idx = id;
+    }
+  }
+  if (trouve)  {
+    pts = sel_trip_pts[idx-1];
+    console.log('sel_trip_pts:'+pts);
+    if (marker_speed != null) {
+      gps_macarte.removeLayer(marker_speed);
+      marker_speed = null;
+    }
+    marker_speed = L.marker(pts).addTo(gps_macarte);
+  }
+});
+
+function trip_alti() {
+
+  // Verification si donnees disponibles
+  if (sel_trip_alt.length == 0) {
+    $("#div_graph_alti").hide();
+    return;
+  }
+  else {
+    $("#div_graph_alti").show();
+  }
+  
+  // mise en forme des donnnes
+  alti_dt_serie = [[]];
+  var dist;
+  var dist_deb = sel_trip_dist[0];
+  nb_pts = sel_trip_dist.length;
+  for (idx=0; idx<nb_pts; idx++) {
+    dist = Math.round(10*(sel_trip_dist[idx]-dist_deb))/10;
+    alti_dt_serie.push([dist,sel_trip_alt[idx]]);
+  }
+
+  // Graphique des distance
+  Highcharts.chart('div_graph_alti', {
+      chart: {
+          plotBackgroundColor:'#808080',
+          type: 'line'
+      },
+      title: {
+          text: ''
+      },
+      xAxis: {
+          title: {
+              text: 'Distance (km)'
+          }
+      },
+      yAxis: {
+          min: 0,
+          title: {
+              text: 'Altitude (m)'
+          }
+      },
+      tooltip: {
+          headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+          pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+              '<td style="padding:0"><b>{point.y:.1f} m</b></td></tr>',
+          footerFormat: '</table>',
+          shared: true,
+          useHTML: true
+      },
+      series: [{
+          name: 'Altitude',
+          showInLegend: false,
+          color: '#4040FF',
+          data: alti_dt_serie
+
+      }]
+  });
+
+
+}
+
+// Génération du graphe de vitesse pour le trajet selectionne
+// ==========================================================
 var speed_dt_serie = [[]];
 Highcharts.addEvent(Highcharts.Point, 'click', function () {
   var dist = this.x;
@@ -493,7 +591,17 @@ Highcharts.addEvent(Highcharts.Point, 'click', function () {
   }
 });
 
-function trip_alti() {
+function trip_speed() {
+
+  // Verification si donnees disponibles
+  console.log('sel_trip_spd:'+sel_trip_spd.length);
+  if (sel_trip_spd.length == 0) {
+    $("#div_graph_speed").hide();
+    return;
+  }
+  else {
+    $("#div_graph_speed").show();
+  }
 
   // mise en forme des donnnes
   speed_dt_serie = [[]];
@@ -502,11 +610,11 @@ function trip_alti() {
   nb_pts = sel_trip_dist.length;
   for (idx=0; idx<nb_pts; idx++) {
     dist = Math.round(10*(sel_trip_dist[idx]-dist_deb))/10;
-    speed_dt_serie.push([dist,sel_trip_alti[idx]]);
+    speed_dt_serie.push([dist,sel_trip_spd[idx]]);
   }
 
   // Graphique des distance
-  Highcharts.chart('div_graph_alti', {
+  Highcharts.chart('div_graph_speed', {
       chart: {
           plotBackgroundColor:'#808080',
           type: 'line'

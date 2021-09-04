@@ -136,7 +136,8 @@ if (is_object($cmd_mlg)) {
               <div class="col-lg-8 col-lg-offset-2">
                 <div id="trips_list" style="float:left;width:45%">
                   <div id='div_hist_liste' style="font-size: 1.2em;"></div>
-                  <div id='div_graph_alti'  style="padding-top:10px;min-height:200px;"></div>
+                  <div id='div_graph_alti'  style="padding-top:10px;min-height:200px;display: none;"></div>
+                  <div id='div_graph_speed'  style="padding-top:10px;min-height:200px;display: none;"></div>
                   <div id='div_hist_liste2' style="font-size: 1.2em;">
                     <table id="trip_liste" class="display compact" width="100%"></table>
                   </div>

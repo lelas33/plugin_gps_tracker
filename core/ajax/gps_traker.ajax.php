@@ -97,8 +97,8 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
     while (($buffer = fgets($fcar, 4096)) !== false) {
       // extrait les timestamps debut et fin du trajet
       $tmp=explode(",", $buffer);
-      if (count($tmp) == 6) {
-        list($pts_ts, $pts_lat, $pts_lon, $pts_speed, $pts_mlg, $pts_moving) = $tmp;
+      if (count($tmp) == 7) {
+        list($pts_ts, $pts_lat, $pts_lon, $pts_alt, $pts_speed, $pts_mlg, $pts_moving) = $tmp;
         $pts_tsi = intval($pts_ts);
         // selectionne les trajets selon leur date depart&arrive
         if (($pts_tsi>=$first_ts) && ($pts_tsi<=$last_ts)) {

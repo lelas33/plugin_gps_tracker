@@ -29,16 +29,15 @@ define("GPS_FILES_DIR_CL", "/../../data/");
 //  * TRIP_STS: Start Timestamp 
 //  * TRIP_ETS: End Timestamp
 //  * TRIP_DTS: Distance parcourue pendant le trajet
-//  * TRIP_DTS: Energie consommée pendant le trajet (en % batterie)
 
-// car_gps.log : liste des positions de la voiture
+// car_gps.log : liste des positions de l'objet suivi
 //  * PTS_TS: Timestamp
 //  * PTS_LAT: Lattitude GPS
 //  * PTS_LON: Longitude GPS
 //  * PTS_ALT: Altitude
-//  * PTS_BATT: Niveau de la batterie en %
+//  * PTS_SPD: Vitesse
 //  * PTS_MLG: Kilométrage courant
-//  * PTS_KIN: Voiture en mouvement
+//  * PTS_KIN: Object en mouvement (0:still, 1:on_foot, 2:running, 3:on_bicycle, 4:in_vehicle)
 
 
 // Classe principale du plugin
@@ -302,14 +301,15 @@ class gps_traker extends eqLogic {
             return;  // Erreur de login API Traceur GPS
             }
           // extraction des donnees utiles
-          $vitesse = round(floatval($ret["result"]->speed), 1);
-          $batt_level = $ret["result"]->battery;
-          $kinetic_moving = ($ret["result"]->isStop == "1") ? 0 : 1;
           $lat = floatval($ret["result"]->lat);
           $lon = floatval($ret["result"]->lng);
+          $alt = 0;
+          $vitesse = round(floatval($ret["result"]->speed), 1);
+          $kinetic_moving = ($ret["result"]->isStop == "1") ? 0 : 1;
+          $batt_level = $ret["result"]->battery;
         }
         else if ($traker_type == "JCN") {
-          // execution commande position pour l'objet suivit (Jeedom Connect)
+          // execution commande position pour l'objet suivi (Jeedom Connect)
           $jd_getposition_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jc_position'));
           $jd_getposition_cmd  = cmd::byId($jd_getposition_cmdname);
           if (!is_object($jd_getposition_cmd)) {
@@ -320,12 +320,40 @@ class gps_traker extends eqLogic {
           $gps_array = explode(",", $gps_position);
           $lat = floatval($gps_array[0]);
           $lon = floatval($gps_array[1]);
+          if (count($gps_array) == 3)
+            $alt = floatval($gps_array[2]);
+          else
+            $alt = 0;
           $vitesse = 0;
-          $batt_level = 100;
-          $kinetic_moving = 0;
+          // execution commande activite pour l'objet suivi (Jeedom Connect)
+          $jd_getactivite_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jc_activite'));
+          $jd_getactivite_cmd  = cmd::byId($jd_getactivite_cmdname);
+          if (!is_object($jd_getactivite_cmd)) {
+            throw new Exception(__('Impossible de trouver la commande gps activité', __FILE__));
+          }
+          $activite = $jd_getactivite_cmd->execCmd();
+          if ($activite == "still")
+            $kinetic_moving = 0;
+          elseif ($activite == "on_foot")
+            $kinetic_moving = 1;
+          elseif ($activite == "running")
+            $kinetic_moving = 2;
+          elseif ($activite == "on_bicycle")
+            $kinetic_moving = 3;
+          elseif ($activite == "in_vehicle")
+            $kinetic_moving = 4;
+          else
+            $kinetic_moving = 0;
+          // execution commande batterie pour l'objet suivi (Jeedom Connect)
+          $jd_getbatterie_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jc_batterie'));
+          $jd_getbatterie_cmd  = cmd::byId($jd_getbatterie_cmdname);
+          if (!is_object($jd_getbatterie_cmd)) {
+            throw new Exception(__('Impossible de trouver la commande gps batterie', __FILE__));
+          }
+          $batt_level = $jd_getbatterie_cmd->execCmd();
         }
         // Traitement des informations retournees
-        log::add('gps_traker','debug', $traker_name."->MAJ des données du traceur GPS: ".$data_dir);
+        // log::add('gps_traker','debug', $traker_name."->MAJ des données du traceur GPS: ".$data_dir);
         $cmd_mlg = $this->getCmd(null, "kilometrage");
         $previous_mileage = $cmd_mlg->execCmd();
         $previous_ts = $cmd_mlg->getConfiguration('prev_ctime');
@@ -334,6 +362,7 @@ class gps_traker extends eqLogic {
         $cmd = $this->getCmd(null, "battery_traker");
         $cmd->event($batt_level);
         $cmd = $this->getCmd(null, "kinetic_moving");
+        $previous_kinetic_moving = $cmd->execCmd();
         $cmd->event($kinetic_moving);
 
         // Etat courant du trajet
@@ -347,7 +376,7 @@ class gps_traker extends eqLogic {
           $gps_pts_ok = true;
 
         if ($gps_pts_ok == true) {
-          $gps_position = $lat.",".$lon;
+          $gps_position = $lat.",".$lon.",".$alt;
           $previous_gps_position = $cmd_gps->execCmd();
           // log::add('gps_traker','debug',"GPS position =>".$gps_position);
           // log::add('gps_traker','debug',"Refresh log previous_gps_position=".$previous_gps_position);
@@ -388,7 +417,7 @@ class gps_traker extends eqLogic {
         $trip_event = 0;
         if ($trip_in_progress == 0) {
           // Pas de trajet en cours
-          if (($kinetic_moving == 1) && ($previous_mileage != 0)) {
+          if (($kinetic_moving > 0) && ($previous_mileage != 0)) {
             // debut de trajet
             $trip_start_ts       = $previous_ts;
             $trip_start_mileage  = $previous_mileage;
@@ -402,7 +431,7 @@ class gps_traker extends eqLogic {
         }
         else {
           // Un trajet est en cours
-          if ($kinetic_moving == 0) {
+          if (($kinetic_moving == 0) && ($previous_kinetic_moving == 0)) {
             // fin de trajet
             $trip_end_ts       = $ctime;
             $trip_end_mileage  = $mileage;
@@ -418,7 +447,7 @@ class gps_traker extends eqLogic {
           }
         }
         // Log position courante vers GPS log file (pas si vehicule à l'arrêt "à la maison" et pas si "trajets alternatifs")
-        if (($gps_pts_ok == true) && (($dist_home > 0.050) || ($kinetic_moving == 1))) {
+        if (($gps_pts_ok == true) && (($kinetic_moving > 0) || ($previous_kinetic_moving > 0))) {
           $gps_log_dt = $ctime.",".$gps_position.",".$vitesse.",".$mileage.",".$kinetic_moving."\n";
           log::add('gps_traker','debug', $traker_name."->Refresh->recording Gps_dt=".$gps_log_dt);
           file_put_contents($fn_car_gps, $gps_log_dt, FILE_APPEND | LOCK_EX);
