@@ -2,7 +2,7 @@
 
 ## Fonctions
 
-Ce plugin permet de capturer les trajets enregistrés par un traceurs GPS, et de les organiser dans une base de données locale.<br>
+Ce plugin permet de capturer les trajets enregistrés par un traceur GPS, et de les organiser dans une base de données locale.<br>
 Cela permet de suivre une voiture, un bateau, un vélo ou un piéton.<br>
 
 Il permet de gérer 2 traceurs GPS dans sa première version:
@@ -30,31 +30,30 @@ Par source Github:
   * Utilisateur ou organisation du dépôt : lelas33
   * Nom du dépôt : plugin_gps_tracker
   * Branche : master
-* Lorsque l'installation est finie, faire un refresh de la page. Le plugin "Voitures Peugeot" doit apparaitre.
+* Lorsque l'installation est finie, faire un refresh de la page. Le plugin "GPS-Traker" doit apparaitre.
 * Sélectionner le plugin et l'activer.
 
 
 ## Configuration
 Une fois l'installation effectuée:<br>
-Sur l'onglet "**Equipement**", sélectionner le type de traceur GPS utilisé (TK905 ou JeedomConnect), et choisissez l'objet parent<br>
+Sur l'onglet "**Equipement**", sélectionner le type de traceur GPS utilisé (TK905 ou JeedomConnect), et choisissez l'objet parent.<br>
 Vous pouvez ensuite télécharger une image de l'objet suivi, qui sera reprise dans le widget et le pannel.<br>
 
 <p align="left">
   <img src="../images/config_equipement.png" width="800" title="Configuration équipement">
 </p>
 
-Il faut saisir ensuite quelques informations complémentaires selon le type de traceur:
+Il faut saisir ensuite quelques informations complémentaires selon le type de traceur.<br>
 Pour le traceur TKSTAR:
 * Le Numéro IMEI / ID du traceur
 * Les paramètres de login au compte associé. (Login / mot de passe)
 
-Pour le traceur Jeedom connect, il faut saisir les 3 paramètres suivants qui sont des champs "info" de votre équipement Téléphone dans le plugin JeedomConnect
+Pour le traceur Jeedom connect, il faut saisir les 3 paramètres suivants qui sont des champs "info" de votre équipement Téléphone dans le plugin JeedomConnect.
 * Activité  : Type de trajet en cours
 * Position : Position GPS courante
 * Batterie : Etat de la batterie du téléphone
 
-Si le paramètre "Ajouter altitude à la position" est validé dans l'équipement JeedomConnect, il sera alors possible de visualiser la coupe de profil des trajets.<br>4
-
+Si le paramètre "Ajouter altitude à la position" est validé dans l'équipement JeedomConnect, il sera alors possible de visualiser la coupe de profil des trajets.<br>
 
 La page du panel à besoin de connaitre les coordonnées GPS de stationnement habituel de la voiture afin de centrer la carte pour l’affichage des trajets. <br>
 Pour cela, il faut renseigner ces coordonnées GPS dans la page de configuration de jeedom.<br>
@@ -73,7 +72,7 @@ Une page de type "panel" est disponible pour le plugin dans le menu Acceuil de j
 Cette page permet de consulter les informations suivantes sur 3 onglets différents:
 * Liste des trajets effectués par l'objet tracé
 * Statistiques sur l'utilisation de l'objet tracé
-* Configuration du véhicule
+* Configuration
 
 **Affichage des trajets:**
 Il est possible de définir une période soit par 2 dates, soit par des racourcis ('Aujourd'hui', 'hier', 'les 7 derniers jours' ou 'tout'), puis d'afficher l'ensemble des trajets sur cette période.<br>
@@ -85,11 +84,11 @@ Si les informations de vitesse, ou d'altitude sont disponibles dans les informat
 Et si l'on clique sur un point du profil, la position correspondante est affichée sur la carte.
 
 <p align="left">
-  <img src="../images/panel1.png" width="600" title="Panel1">
+  <img src="../images/panel1.png" width="700" title="Panel1">
 </p>
 
 **Statistiques:**
-Présentations sous forme de graphe des distances parcourues par l'objet suivi, basées sur l'historique des trajets mémorisés.
+Présentation sous forme de graphe des distances parcourues par l'objet suivi, basées sur l'historique des trajets mémorisés.
 
 
 **Configuration:**

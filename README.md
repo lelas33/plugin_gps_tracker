@@ -2,7 +2,7 @@
 
 ## Fonctions
 
-Ce plugin permet de capturer les trajets enregistrés par un traceurs GPS, et de les organiser dans une base de données locale.<br>
+Ce plugin permet de capturer les trajets enregistrés par un traceur GPS, et de les organiser dans une base de données locale.<br>
 Cela permet de suivre une voiture, un bateau, un vélo ou un piéton.<br>
 
 Il permet de gérer 2 traceurs GPS dans sa première version:
