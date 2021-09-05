@@ -21,7 +21,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                 <br>
                 <span>{{Configuration}}</span>
             </div>
-            <div class="cursor eqLogicAction logoSecondary" onclick="window.open('https:\/\/github.com/lelas33/plugin_peugeotcars/blob/master/README.md', '_blank')">
+            <div class="cursor eqLogicAction logoSecondary" onclick="window.open('https:\/\/github.com/lelas33/plugin_gps_tracker/blob/master/README.md', '_blank')">
                 <i class="fas fa-book"></i>
                 <br>
                 <span>{{Documentation}}</span>
