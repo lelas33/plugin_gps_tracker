@@ -8,7 +8,6 @@
 	"display" : "panel",
 	"hasDependency" : false,
 	"hasOwnDeamon" : false,
-	"maxDependancyInstallTime" : 5,
 	"changelog" : "https://github.com/lelas33/gps_tracker/blob/master/doc/#language#/changelog.md",
 	"documentation" : "https://github.com/lelas33/gps_tracker/blob/master/doc/#language#/documentation.md",
 	"language" : ["fr_FR"],
