@@ -16,6 +16,7 @@
  * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
  */
 
+define("TMP_DIR",      "/../../data/tmp/");
 define("TMP_IMG_FILE", "/../../data/tmp/img.png");
 
 // =====================================
@@ -39,6 +40,10 @@ try {
   if ($_FILES["file"]["error"] == UPLOAD_ERR_OK) {
       $name = $_FILES["file"]["name"];
       // log::add('gps_tracker', 'info', 'Ajax:upload images : name='.$name);
+      $temp_dir= dirname(__FILE__).TMP_DIR;
+      // if "temp" dir does not exists, create it
+      if (!is_dir($temp_dir))
+        mkdir($temp_dir);
       $temp_fn = dirname(__FILE__).TMP_IMG_FILE;
       // log::add('gps_tracker', 'info', 'Ajax:upload images : TMP_IMG_DIR='.$temp_fn);
       $ret = move_uploaded_file( $_FILES["file"]["tmp_name"], $temp_fn);
