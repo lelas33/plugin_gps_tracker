@@ -137,7 +137,7 @@ function loadData(){
     globalEqLogic = $("#eqlogic_select option:selected").val();
     $.ajax({
         type: 'POST',
-        url: 'plugins/gps_traker/core/ajax/gps_traker.ajax.php',
+        url: 'plugins/gps_tracker/core/ajax/gps_tracker.ajax.php',
         data: {
             action: 'getTripData',
             eq_id: globalEqLogic,  // id de l'équipement traceur
@@ -149,7 +149,7 @@ function loadData(){
             handleAjaxError(request, status, error);
         },
         success: function (data) {
-            console.log("[loadData] Objet gps_traker récupéré : " + globalEqLogic);
+            console.log("[loadData] Objet gps_tracker récupéré : " + globalEqLogic);
             if (data.state != 'ok') {
                 $('#div_alert').showAlert({message: data.result, level: 'danger'});
                 return;
@@ -664,7 +664,7 @@ function loadStats(){
     globalEqLogic = $("#eqlogic_select option:selected").val();
     $.ajax({
         type: 'POST',
-        url: 'plugins/gps_traker/core/ajax/gps_traker.ajax.php',
+        url: 'plugins/gps_tracker/core/ajax/gps_tracker.ajax.php',
         data: {
             action: 'getTripStats',
             eq_id: globalEqLogic,  // id de l'équipement traceur
@@ -783,7 +783,7 @@ function set_mileage(){
     globalEqLogic = $("#eqlogic_select option:selected").val();
     $.ajax({
         type: 'POST',
-        url: 'plugins/gps_traker/core/ajax/gps_traker.ajax.php',
+        url: 'plugins/gps_tracker/core/ajax/gps_tracker.ajax.php',
         data: {
             action: 'setMileage',
             eq_id: globalEqLogic,  // id de l'équipement traceur

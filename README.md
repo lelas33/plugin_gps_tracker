@@ -1,4 +1,4 @@
-# plugin-GPS_Traker
+# plugin-GPS_Tracker
 
 ## Fonctions
 

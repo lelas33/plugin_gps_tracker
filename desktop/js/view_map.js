@@ -80,7 +80,7 @@ function get_current_position(){
       return;
     $.ajax({
         type: 'POST',
-        url: 'plugins/gps_traker/core/ajax/gps_traker.ajax.php',
+        url: 'plugins/gps_tracker/core/ajax/gps_tracker.ajax.php',
         data: {
             action: 'getCurrentPosition',
             eq_id: eq_id   // identifiant du plugin lie au traceur GPS
@@ -91,7 +91,7 @@ function get_current_position(){
             handleAjaxError(request, status, error);
         },
         success: function (data) {
-            console.log("[get_current_position] Objet gps_traker récupéré : " + eq_id);
+            console.log("[get_current_position] Objet gps_tracker récupéré : " + eq_id);
             if (data.state != 'ok') {
                 $('#div_alert').showAlert({message: data.result, level: 'danger'});
                 return;

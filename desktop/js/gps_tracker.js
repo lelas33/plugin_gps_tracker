@@ -35,7 +35,7 @@ $('.load_image').off('change', '#load_image_input').on('change', '#load_image_in
 
   $.ajax({
     type: "POST",
-    url: 'plugins/gps_traker/core/ajax/gps_traker_upload.ajax.php',
+    url: 'plugins/gps_tracker/core/ajax/gps_tracker_upload.ajax.php',
     data: formData,
     success: function (data) {
        console.log(data);
@@ -60,7 +60,7 @@ $('.eqLogicAttr[data-l1key=id]').change(function() {
   // Interrogation du serveur pour avoir le nom et chemin du fichier image de l'objet suivi
   $.ajax({
       type: 'POST',
-      url: 'plugins/gps_traker/core/ajax/gps_traker.ajax.php',
+      url: 'plugins/gps_tracker/core/ajax/gps_tracker.ajax.php',
       data: {
           action: 'getImagePath',
           eq_id: eq_id,  // Id de l'objet eqlogic
@@ -71,7 +71,7 @@ $('.eqLogicAttr[data-l1key=id]').change(function() {
           handleAjaxError(request, status, error);
       },
       success: function (data) {
-          console.log("[loadData] Objet gps_traker récupéré : " + eq_id);
+          console.log("[loadData] Objet gps_tracker récupéré : " + eq_id);
           if (data.state != 'ok') {
               $('#div_alert').showAlert({message: data.result, level: 'danger'});
               return;

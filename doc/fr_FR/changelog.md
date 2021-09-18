@@ -1,4 +1,4 @@
-# Changelog plugin GPS-Traker
+# Changelog plugin GPS-Tracker
 
 
 ## 05/09/2021: Tag gps_trk_v0.1

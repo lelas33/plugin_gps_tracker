@@ -42,7 +42,7 @@ define("GPS_FILES_DIR_CL", "/../../data/");
 
 // Classe principale du plugin
 // ===========================
-class gps_traker extends eqLogic {
+class gps_tracker extends eqLogic {
     /*     * *************************Attributs****************************** */
     /*     * ***********************Methode static*************************** */
 
@@ -59,16 +59,16 @@ class gps_traker extends eqLogic {
 
     private function getListeDefaultCommandes()
     {
-        return array( "photo"                => array('Photo objet suivi',   'action','slider',     "", 0, 1, "GENERIC_ACTION", 'gps_traker::img_gpstr', 'gps_traker::img_gpstr'),
+        return array( "photo"                => array('Photo objet suivi',   'action','slider',     "", 0, 1, "GENERIC_ACTION", 'gps_tracker::img_gpstr', 'gps_tracker::img_gpstr'),
                       "kilometrage"          => array('Kilometrage',         'info',  'numeric',  "km", 1, 1, "GENERIC_INFO",   'core::badge', 'core::badge'),
                       "record_period"        => array('Période enregistrement','info','numeric',    "", 1, 0, "GENERIC_INFO",   'core::badge', 'core::badge'),
-                      "battery_traker"       => array('Batterie traceur',    'info',  'numeric',   "%", 1, 1, "GENERIC_INFO",   'gps_traker::battery_status_mmi_gpstr', 'gps_traker::battery_status_mmi_gpstr'),
-                      "gps_position"         => array('Position GPS',        'info',  'string',     "", 0, 1, "GENERIC_INFO",   'gps_traker::opensmap_gpstr',   'gps_traker::opensmap_gpstr'),
+                      "battery_tracker"      => array('Batterie traceur',    'info',  'numeric',   "%", 1, 1, "GENERIC_INFO",   'gps_tracker::battery_status_mmi_gpstr', 'gps_tracker::battery_status_mmi_gpstr'),
+                      "gps_position"         => array('Position GPS',        'info',  'string',     "", 0, 1, "GENERIC_INFO",   'gps_tracker::opensmap_gpstr',   'gps_tracker::opensmap_gpstr'),
                       "gps_vitesse"          => array('Vitesse dépacement',  'info',  'numeric',"km/h", 1, 1, "GENERIC_INFO",   'core::badge', 'core::badge'),
                       "gps_position_lat"     => array('Position GPS Lat.',   'info',  'numeric',    "", 0, 0, "GENERIC_INFO",   'core::badge', 'core::badge'),
                       "gps_position_lon"     => array('Position GPS Lon.',   'info',  'numeric',    "", 0, 0, "GENERIC_INFO",   'core::badge', 'core::badge'),
                       "gps_dist_home"        => array('Distance maison',     'info',  'numeric',  "km", 1, 1, "GENERIC_INFO",   'core::line', 'core::line'),
-                      "kinetic_moving"       => array('Voiture en mouvement','info',  'binary',     "", 1, 1, "GENERIC_INFO",   'gps_traker::veh_moving_gpstr', 'gps_traker::veh_moving_gpstr')
+                      "kinetic_moving"       => array('Voiture en mouvement','info',  'binary',     "", 1, 1, "GENERIC_INFO",   'gps_tracker::veh_moving_gpstr', 'gps_tracker::veh_moving_gpstr')
         );
     }
 
@@ -77,38 +77,38 @@ class gps_traker extends eqLogic {
     public function postSave()
     {
       // filtrage premier passage
-      $traker_type = $this->getConfiguration("type_traker");
-      log::add('gps_traker','debug',"postSave:Type traceur:".$traker_type);
+      $tracker_type = $this->getConfiguration("type_tracker");
+      log::add('gps_tracker','debug',"postSave:Type traceur:".$tracker_type);
 
       // Pour les traceur TKSTAR, verification du Login API
-      if ($traker_type == "TKS") {
+      if ($tracker_type == "TKS") {
         $imei_id     = $this->getConfiguration("tkstar_imei");
         $tk_account  = $this->getConfiguration("tkstar_account");
         $tk_password = $this->getConfiguration("tkstar_password");
         if (($imei_id == "") || ($tk_account == "") || ($tk_password == "")) {
-          log::add('gps_traker','error',"postSave: TKS->Paramètres de Login API Traceur GPS non définis");
+          log::add('gps_tracker','error',"postSave: TKS->Paramètres de Login API Traceur GPS non définis");
           return;
         }
-        $session_gps_traker = new api_tkstar();
-        $session_gps_traker->login($tk_account, $tk_password, NULL);
-        $login_token = $session_gps_traker->tkstar_api_login();   // Authentification
+        $session_gps_tracker = new api_tkstar();
+        $session_gps_tracker->login($tk_account, $tk_password, NULL);
+        $login_token = $session_gps_tracker->tkstar_api_login();   // Authentification
         if ($login_token["status"] == "KO") {
-          log::add('gps_traker','error',"postSave: TKS->Erreur Login API Traceur GPS");
+          log::add('gps_tracker','error',"postSave: TKS->Erreur Login API Traceur GPS");
           return;  // Erreur de login API Traceur GPS
         }
         $data_dir = "tks_".$imei_id;
-        log::add('gps_traker','debug',"postSave: TKS-> IMEI=".$imei_id." / login success=".$login_token["status"]." (données:data/".$data_dir.")" );
+        log::add('gps_tracker','debug',"postSave: TKS-> IMEI=".$imei_id." / login success=".$login_token["status"]." (données:data/".$data_dir.")" );
       }
       // Pour les traceur JeedomConnect, verification de la commande "get GPS position"
-      else if ($traker_type == "JCN") {
+      else if ($tracker_type == "JCN") {
         $jd_getposition_cmd  = $this->getConfiguration("cmd_jc_position");
         if ($jd_getposition_cmd == "") {
-          log::add('gps_traker','error',"postSave: JCN->Commande d'accès à la position GPS non definie");
+          log::add('gps_tracker','error',"postSave: JCN->Commande d'accès à la position GPS non definie");
           return;
         }
         $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
         $data_dir = "jcn_".$jd_getposition_cmdf;
-        log::add('gps_traker','debug',"postSave: JCN-> TEL_ID=".$jd_getposition_cmdf." (données:data/".$data_dir.")" );
+        log::add('gps_tracker','debug',"postSave: JCN-> TEL_ID=".$jd_getposition_cmdf." (données:data/".$data_dir.")" );
       }
 
       // creation de la liste des commandes / infos
@@ -117,7 +117,7 @@ class gps_traker extends eqLogic {
         $cmd = $this->getCmd(null, $id);
         if (! is_object($cmd)) {
           // New CMD
-          $cmd = new gps_trakerCmd();
+          $cmd = new gps_trackerCmd();
           $cmd->setName($name);
           $cmd->setEqLogic_id($this->getId());
           $cmd->setType($type);
@@ -176,7 +176,7 @@ class gps_traker extends eqLogic {
             $param = $this->getId().','.$data_dir;
             $cmd->setConfiguration('listValue', 'PARAM|'.'&'.$param.'~');
             $cmd->save();
-            log::add('gps_traker','debug',"postSave: param=".$param);
+            log::add('gps_tracker','debug',"postSave: param=".$param);
           }
           else {
             $cmd->save($data_dir);
@@ -187,7 +187,7 @@ class gps_traker extends eqLogic {
       // ajout de la commande refresh data
       $refresh = $this->getCmd(null, 'refresh');
       if (!is_object($refresh)) {
-        $refresh = new gps_trakerCmd();
+        $refresh = new gps_trackerCmd();
         $refresh->setName(__('Rafraichir', __FILE__));
       }
       $refresh->setEqLogic_id($this->getId());
@@ -195,7 +195,7 @@ class gps_traker extends eqLogic {
       $refresh->setType('action');
       $refresh->setSubType('other');
       $refresh->save();
-      log::add('gps_traker','debug','postSave:Ajout ou Mise à jour traceur GPS:'.$data_dir);
+      log::add('gps_tracker','debug','postSave:Ajout ou Mise à jour traceur GPS:'.$data_dir);
       
       // Creation du dossier pour stocker les donnees de l'objet suivi : "data/xxxx/" du plugin
       $data_fulldir = dirname(__FILE__).GPS_FILES_DIR_CL.$data_dir;
@@ -220,20 +220,20 @@ class gps_traker extends eqLogic {
     // Fonction appelée au rythme de 1 mn (recuperation des informations courantes de la voiture)
     // ==========================================================================================
     public static function pull() {
-      foreach (self::byType('gps_traker') as $eqLogic) {
+      foreach (self::byType('gps_tracker') as $eqLogic) {
         $eqLogic->periodic_state(0);
       }
     }
     
     // Lecture des statuts du vehicule connecté
     public function periodic_state($rfh) {
-      $traker_type = $this->getConfiguration("type_traker");
+      $tracker_type = $this->getConfiguration("type_tracker");
       $minute = intval(date("i"));
       $heure  = intval(date("G"));
-      $traker_name = $this->getHumanName();
+      $tracker_name = $this->getHumanName();
 
       // Pour les traceur TKSTAR, verification du Login API
-      if ($traker_type == "TKS") {
+      if ($tracker_type == "TKS") {
         $imei_id     = $this->getConfiguration("tkstar_imei");
         $tk_account  = $this->getConfiguration("tkstar_account");
         $tk_password = $this->getConfiguration("tkstar_password");
@@ -243,7 +243,7 @@ class gps_traker extends eqLogic {
         $data_dir = "tks_".$imei_id;
       }
       // Pour les traceur JeedomConnect, verification de la commande "get GPS position"
-      else if ($traker_type == "JCN") {
+      else if ($tracker_type == "JCN") {
         $jd_getposition_cmd  = $this->getConfiguration("cmd_jc_position");
         if ($jd_getposition_cmd == "") {
           return;
@@ -262,42 +262,42 @@ class gps_traker extends eqLogic {
         $record_period = $cmd_record_period->execCmd();
         if ($record_period == NULL)
           $record_period = 0;
-        // log::add('gps_traker','debug', $traker_name."->record_period:".$record_period);
+        // log::add('gps_tracker','debug', $tracker_name."->record_period:".$record_period);
 
        
         // Toutes les mn => Mise à jour des informations du traceur
         // ========================================================
         // Recuperation des donnees du traceur GPS, selon son type
-        if ($traker_type == "TKS") {
+        if ($tracker_type == "TKS") {
           $last_login_token = $cmd_record_period->getConfiguration('save_auth');
           if ((!isset($last_login_token)) || ($last_login_token == "") || ($rfh==1))
             $last_login_token = NULL;
-          $session_gps_traker = new api_tkstar();
-          $session_gps_traker->login($tk_account, $tk_password, $last_login_token);
+          $session_gps_tracker = new api_tkstar();
+          $session_gps_tracker->login($tk_account, $tk_password, $last_login_token);
           if ($last_login_token == NULL) {
-            $login_token = $session_gps_traker->tkstar_api_login();   // Authentification
+            $login_token = $session_gps_tracker->tkstar_api_login();   // Authentification
             if ($login_token["status"] != "OK") {
-              log::add('gps_traker','error', $traker_name."->Erreur Login API Traceur GPS (Pas de session en cours)");
+              log::add('gps_tracker','error', $tracker_name."->Erreur Login API Traceur GPS (Pas de session en cours)");
               return;  // Erreur de login API Traceur GPS
             }
             $cmd_record_period->setConfiguration ('save_auth', $login_token);
             $cmd_record_period->save();
-            log::add('gps_traker','info', $traker_name."->Pas de session en cours => New login");
+            log::add('gps_tracker','info', $tracker_name."->Pas de session en cours => New login");
           }
-          else if ($session_gps_traker->state_login() == 0) {
-            $login_token = $session_gps_traker->tkstar_api_login();   // Authentification
+          else if ($session_gps_tracker->state_login() == 0) {
+            $login_token = $session_gps_tracker->tkstar_api_login();   // Authentification
             if ($login_token["status"] != "OK") {
-              log::add('gps_traker','error', $traker_name."->Erreur Login API Traceur GPS (Session expirée)");
+              log::add('gps_tracker','error', $tracker_name."->Erreur Login API Traceur GPS (Session expirée)");
               return;  // Erreur de login API Traceur GPS
             }
             $cmd_record_period->setConfiguration ('save_auth', $login_token);
             $cmd_record_period->save();
-            log::add('gps_traker','info', $traker_name."->Session expirée => New login");
+            log::add('gps_tracker','info', $tracker_name."->Session expirée => New login");
           }
           // Capture des donnes courantes issues du GPS
-          $ret = $session_gps_traker->tkstar_api_getdata();
+          $ret = $session_gps_tracker->tkstar_api_getdata();
           if ($ret["status"] == "KO") {
-            log::add('gps_traker','error', $traker_name."->Erreur Login API Traceur GPS (Access data)");
+            log::add('gps_tracker','error', $tracker_name."->Erreur Login API Traceur GPS (Access data)");
             return;  // Erreur de login API Traceur GPS
             }
           // extraction des donnees utiles
@@ -308,7 +308,7 @@ class gps_traker extends eqLogic {
           $kinetic_moving = ($ret["result"]->isStop == "1") ? 0 : 1;
           $batt_level = $ret["result"]->battery;
         }
-        else if ($traker_type == "JCN") {
+        else if ($tracker_type == "JCN") {
           // execution commande position pour l'objet suivi (Jeedom Connect)
           $jd_getposition_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jc_position'));
           $jd_getposition_cmd  = cmd::byId($jd_getposition_cmdname);
@@ -316,7 +316,7 @@ class gps_traker extends eqLogic {
             throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
           }
           $gps_position = $jd_getposition_cmd->execCmd();
-          # log::add('gps_traker','debug', $traker_name."->gps_position: ".$gps_position);
+          # log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
           $gps_array = explode(",", $gps_position);
           if (count($gps_array) < 5) {
             throw new Exception(__('Il manque des informations dans la commande GPS position', __FILE__));
@@ -341,13 +341,13 @@ class gps_traker extends eqLogic {
             $kinetic_moving = 0;
         }
         // Traitement des informations retournees
-        // log::add('gps_traker','debug', $traker_name."->MAJ des données du traceur GPS: ".$data_dir);
+        // log::add('gps_tracker','debug', $tracker_name."->MAJ des données du traceur GPS: ".$data_dir);
         $cmd_mlg = $this->getCmd(null, "kilometrage");
         $previous_mileage = $cmd_mlg->execCmd();
         $previous_ts = $cmd_mlg->getConfiguration('prev_ctime');
         $cmd = $this->getCmd(null, "gps_vitesse");
         $cmd->event($vitesse);
-        $cmd = $this->getCmd(null, "battery_traker");
+        $cmd = $this->getCmd(null, "battery_tracker");
         $cmd->event($batt_level);
         $cmd = $this->getCmd(null, "kinetic_moving");
         $previous_kinetic_moving = $cmd->execCmd();
@@ -366,8 +366,8 @@ class gps_traker extends eqLogic {
         if ($gps_pts_ok == true) {
           $gps_position = $lat.",".$lon.",".$alt;
           $previous_gps_position = $cmd_gps->execCmd();
-          // log::add('gps_traker','debug',"GPS position =>".$gps_position);
-          // log::add('gps_traker','debug',"Refresh log previous_gps_position=".$previous_gps_position);
+          // log::add('gps_tracker','debug',"GPS position =>".$gps_position);
+          // log::add('gps_tracker','debug',"Refresh log previous_gps_position=".$previous_gps_position);
           $eq_id = $this->getId();
           $cmd_gps->event($gps_position.",".$eq_id);   // ajout de l'ID plugin pour transmission au process AJAX sur serveur
           // $cmd_gps->event($gps_position);
@@ -391,9 +391,9 @@ class gps_traker extends eqLogic {
           $lat_prev = deg2rad(floatval($previous_gps_latlon[0]));
           $lon_prev = deg2rad(floatval($previous_gps_latlon[1]));
           $dist_prev = 6371.01 * acos(sin($lat_prev)*sin($lat_veh) + cos($lat_prev)* cos($lat_veh)*cos($lon_prev - $lon_veh)); // calcul de la distance
-          // log::add('gps_traker','debug',"Refresh log dist_prev=".$dist_prev);
+          // log::add('gps_tracker','debug',"Refresh log dist_prev=".$dist_prev);
           if (is_nan($dist_prev)) {
-            log::add('gps_traker','error', $traker_name."->Erreur sur le calcul de distance:".$dist_prev);
+            log::add('gps_tracker','error', $tracker_name."->Erreur sur le calcul de distance:".$dist_prev);
             $dist_prev = 0.0;
           }
           $mileage = round($previous_mileage + $dist_prev, 1);
@@ -428,7 +428,7 @@ class gps_traker extends eqLogic {
             // enregistrement d'un trajet
             $trip_distance = round($trip_end_mileage - $trip_start_mileage, 1);
             $trip_log_dt = $trip_start_ts.",".$trip_end_ts.",".$trip_distance."\n";
-            log::add('gps_traker','info', $traker_name."->Refresh->recording Trip_dt=".$trip_log_dt);
+            log::add('gps_tracker','info', $tracker_name."->Refresh->recording Trip_dt=".$trip_log_dt);
             file_put_contents($fn_car_trips, $trip_log_dt, FILE_APPEND | LOCK_EX);
             $cmd_gps->setConfiguration('trip_in_progress', $trip_in_progress);
             $cmd_gps->save();
@@ -437,7 +437,7 @@ class gps_traker extends eqLogic {
         // Log position courante vers GPS log file (pas si vehicule à l'arrêt "à la maison" et pas si "trajets alternatifs")
         if (($gps_pts_ok == true) && (($kinetic_moving > 0) || ($previous_kinetic_moving > 0))) {
           $gps_log_dt = $ctime.",".$gps_position.",".$vitesse.",".$mileage.",".$kinetic_moving."\n";
-          log::add('gps_traker','debug', $traker_name."->Refresh->recording Gps_dt=".$gps_log_dt);
+          log::add('gps_tracker','debug', $tracker_name."->Refresh->recording Gps_dt=".$gps_log_dt);
           file_put_contents($fn_car_gps, $gps_log_dt, FILE_APPEND | LOCK_EX);
         }
         // enregistre le ts du point courant
@@ -452,13 +452,13 @@ class gps_traker extends eqLogic {
 
 // Classe pour les commandes du plugin
 // ===================================
-class gps_trakerCmd extends cmd 
+class gps_trackerCmd extends cmd 
 {
     /*     * *************************Attributs****************************** */
     public function execute($_options = null) {
-        //log::add('gps_traker','info',"execute:".$_options['message']);
+        //log::add('gps_tracker','info',"execute:".$_options['message']);
         if ($this->getLogicalId() == 'refresh') {
-          foreach (eqLogic::byType('gps_traker') as $eqLogic) {
+          foreach (eqLogic::byType('gps_tracker') as $eqLogic) {
             $eqLogic->periodic_state(1);
           }
         }

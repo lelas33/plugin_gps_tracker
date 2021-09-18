@@ -23,7 +23,7 @@
         urlcourante = urlcourante.replace(/\/$/, "");
         index_end_root = urlcourante.lastIndexOf( "/" );
         url_root = urlcourante.substring(0, index_end_root);
-        window.location = url_root+"/index.php?v=d&m=gps_traker&p=panel&eq_id="+eq_id+"&eq_path="+eq_path;
+        window.location = url_root+"/index.php?v=d&m=gps_tracker&p=panel&eq_id="+eq_id+"&eq_path="+eq_path;
       }
     });
     jeedom.cmd.update['#id#'] = function(_options){
@@ -42,7 +42,7 @@
       console.log("eq_id:"+eq_id);
       console.log("eq_path:"+eq_path);
       if (eq_path != "") {
-        var img_path = '<img src="plugins/gps_traker/data/' + eq_path + img_fn + '" style="max-height:150px;max-width:250px;height:auto;width:auto;"/>';
+        var img_path = '<img src="plugins/gps_tracker/data/' + eq_path + img_fn + '" style="max-height:150px;max-width:250px;height:auto;width:auto;"/>';
         $('.cmd[data-cmd_id=#id#] .picture').empty().append(img_path);
       }
     }

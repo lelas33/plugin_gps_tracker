@@ -18,12 +18,12 @@
 if (!isConnect('admin')) {
   throw new Exception('{{401 - Accès non autorisé}}');
 }
-include_file('3rdparty', 'leaflet_v1.7.1/leaflet', 'js', 'gps_traker');
-include_file('3rdparty', 'leaflet_v1.7.1/leaflet', 'css', 'gps_traker');
-include_file('3rdparty', 'easy-button/easy-button', 'js', 'gps_traker');
-include_file('3rdparty', 'easy-button/easy-button', 'css', 'gps_traker');
+include_file('3rdparty', 'leaflet_v1.7.1/leaflet', 'js', 'gps_tracker');
+include_file('3rdparty', 'leaflet_v1.7.1/leaflet', 'css', 'gps_tracker');
+include_file('3rdparty', 'easy-button/easy-button', 'js', 'gps_tracker');
+include_file('3rdparty', 'easy-button/easy-button', 'css', 'gps_tracker');
 
-$plugin = plugin::byId('gps_traker');
+$plugin = plugin::byId('gps_tracker');
 $eqLogics = eqLogic::byType($plugin->getId());
 $eq_id = $_GET["eq_id"];
 
@@ -32,5 +32,5 @@ $eq_id = $_GET["eq_id"];
   </div>
   <input type="hidden" id="veh_eq_id"  value=<?php echo($eq_id); ?> />
 <?php 
-include_file('desktop', 'view_map', 'js', 'gps_traker');
+include_file('desktop', 'view_map', 'js', 'gps_tracker');
 ?>

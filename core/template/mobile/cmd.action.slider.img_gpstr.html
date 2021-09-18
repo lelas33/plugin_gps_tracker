@@ -9,38 +9,40 @@
   <script>
 
     $('.cmd[data-cmd_id=#id#] .picture').on('click', function () {
-      var imei_str = '#listValue#';
-      var imei_sta1 = imei_str.indexOf('"IMEI" selected>');
-      var imei_sta2 = imei_str.indexOf('"IMEI">');
-      var imei = "";
-      if (imei_sta1 != -1) {
-        imei = imei_str.substring(imei_sta1+15,imei_sta1+15+10);
+      var param_str = '#listValue#';
+      var imei_sta1 = param_str.indexOf('&');
+      var imei_sta2 = param_str.indexOf('~');
+      if ((imei_sta1 != -1) && (imei_sta2 != -1)) {
+        params = param_str.substring(imei_sta1+1,imei_sta2);
+        param = params.split(',');
+        eq_id = param[0];
+        eq_path = param[1];
       }
-      else if (imei_sta2 != -1) {
-        imei = imei_str.substring(imei_sta2+7,imei_sta2+7+10);
-      }
-      if (imei != "") {
+      if ((eq_id != "") && (eq_path != "")) {
         var urlcourante = document.location.href;
         urlcourante = urlcourante.replace(/\/$/, "");
         index_end_root = urlcourante.lastIndexOf( "/" );
         url_root = urlcourante.substring(0, index_end_root);
-        window.location = url_root+"/index.php?v=d&m=gps_traker&p=panel&car="+imei;
+        window.location = url_root+"/index.php?v=d&m=gps_tracker&p=panel&eq_id="+eq_id+"&eq_path="+eq_path;
       }
     });
     jeedom.cmd.update['#id#'] = function(_options){
       var img_fn = "/img.png";
-      var imei_str = '#listValue#';
-      var imei_sta1 = imei_str.indexOf('"IMEI" selected>');
-      var imei_sta2 = imei_str.indexOf('"IMEI">');
-      var imei = "";
-      if (imei_sta1 != -1) {
-        imei = imei_str.substring(imei_sta1+15,imei_sta1+15+10);
+      var param_str = '#listValue#';
+      console.log("listValue:"+param_str);
+      var imei_sta1 = param_str.indexOf('&');
+      var imei_sta2 = param_str.indexOf('~');
+      var params = "";
+      if ((imei_sta1 != -1) && (imei_sta2 != -1)) {
+        params = param_str.substring(imei_sta1+1,imei_sta2);
+        param = params.split(',');
+        eq_id = param[0];
+        eq_path = param[1];
       }
-      else if (imei_sta2 != -1) {
-        imei = imei_str.substring(imei_sta2+7,imei_sta2+7+10);
-      }
-      if (imei != "") {
-        var img_path = '<img src="plugins/gps_traker/data/' + imei + img_fn + '" style="max-height:150px;max-width:250px;height:auto;width:auto;"/>';
+      console.log("eq_id:"+eq_id);
+      console.log("eq_path:"+eq_path);
+      if (eq_path != "") {
+        var img_path = '<img src="plugins/gps_tracker/data/' + eq_path + img_fn + '" style="max-height:150px;max-width:250px;height:auto;width:auto;"/>';
         $('.cmd[data-cmd_id=#id#] .picture').empty().append(img_path);
       }
     }

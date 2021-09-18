@@ -3,17 +3,17 @@ if (!isConnect()) {
     throw new Exception('{{401 - Accès non autorisé}}');
 }
 
-include_file('3rdparty', 'DataTables/DataTables-1.10.22/js/jquery.dataTables.min', 'js', 'gps_traker');
-include_file('3rdparty', 'DataTables/DataTables-1.10.22/css/jquery.dataTables.min', 'css', 'gps_traker');
-include_file('3rdparty', 'leaflet_v1.7.1/leaflet', 'js', 'gps_traker');
-include_file('3rdparty', 'leaflet_v1.7.1/leaflet', 'css', 'gps_traker');
+include_file('3rdparty', 'DataTables/DataTables-1.10.22/js/jquery.dataTables.min', 'js', 'gps_tracker');
+include_file('3rdparty', 'DataTables/DataTables-1.10.22/css/jquery.dataTables.min', 'css', 'gps_tracker');
+include_file('3rdparty', 'leaflet_v1.7.1/leaflet', 'js', 'gps_tracker');
+include_file('3rdparty', 'leaflet_v1.7.1/leaflet', 'css', 'gps_tracker');
 $date = array(
     'start' => date('Y-m-d', strtotime(config::byKey('history::defautShowPeriod') . ' ' . date('Y-m-d'))),
     'end' => date('Y-m-d'),
 );
-sendVarToJS('eqType', 'gps_traker');
+sendVarToJS('eqType', 'gps_tracker');
 sendVarToJs('object_id', init('object_id'));
-$eqLogics = eqLogic::byType('gps_traker');
+$eqLogics = eqLogic::byType('gps_tracker');
 if ((isset($_GET["eq_id"])) && (isset($_GET["eq_path"]))) {
   $eq_id   = $_GET["eq_id"];
   $eq_path = $_GET["eq_path"];
@@ -27,19 +27,19 @@ else {
   $eq_id = $eqLogic->getId();
   $eq_path = "";
 
-  $traker_type = $eqLogic->getConfiguration("type_traker");
-  if ($traker_type == "TKS") {
+  $tracker_type = $eqLogic->getConfiguration("type_tracker");
+  if ($tracker_type == "TKS") {
     $imei_id     = $eqLogic->getConfiguration("tkstar_imei");
     $eq_path = "tks_".$imei_id;
   }
-  else if ($traker_type == "JCN") {
+  else if ($tracker_type == "JCN") {
     $jd_getposition_cmd  = $eqLogic->getConfiguration("cmd_jc_position");
     $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
     $eq_path = "jcn_".$jd_getposition_cmdf;
   }
 }
 
-log::add('gps_traker', 'debug', 'Pannel: eq_id:'.$eq_id.' / eq_path:'.$eq_path);
+log::add('gps_tracker', 'debug', 'Pannel: eq_id:'.$eq_id.' / eq_path:'.$eq_path);
 
 // recherche kilometrage courant de l'objet trace
 $current_mileage = 0;
@@ -51,7 +51,7 @@ if (is_object($cmd_mlg)) {
 }
 ?>
 
-<div class="row" id="div_gps_traker">
+<div class="row" id="div_gps_tracker">
     <div class="row">
         <div class="col-lg-8 col-lg-offset-2" style="height: 260px;padding-top:10px">
             <fieldset style="border: 1px solid #e5e5e5; border-radius: 5px 5px 0px 5px;background-color:#f8f8f8">
@@ -68,7 +68,7 @@ if (is_object($cmd_mlg)) {
                 </select>
               </div>
               <div class="pull-right" style="min-height: 30px;">
-                <img id="voiture_img" src=<?php echo "plugins/gps_traker/data/$eq_path/img.png"; ?> style="max-height:250px;max-width:350px;height:auto;width:auto;" />
+                <img id="voiture_img" src=<?php echo "plugins/gps_tracker/data/$eq_path/img.png"; ?> style="max-height:250px;max-width:350px;height:auto;width:auto;" />
               </div>
             </fieldset>
         </div>
@@ -158,7 +158,7 @@ if (is_object($cmd_mlg)) {
                              <i style="font-size: initial;"></i> {{Statistiques par mois sur les trajets réalisés}}
                          </div>
                          <div style="min-height: 30px;">
-                           <img src="plugins/gps_traker/desktop/php/distance.jpg"; width="150" />
+                           <img src="plugins/gps_tracker/desktop/php/distance.jpg"; width="150" />
                            <i style="font-size: 1.5em;">{{Distances parcourues}}</i>
                          </div>
                          <div id='div_graph_stat_dist' style="font-size: 1.2em;"></div>
@@ -192,4 +192,4 @@ if (is_object($cmd_mlg)) {
     </div>
     </div>
 </div>
-<?php include_file('desktop', 'panel', 'js', 'gps_traker');?>
+<?php include_file('desktop', 'panel', 'js', 'gps_tracker');?>

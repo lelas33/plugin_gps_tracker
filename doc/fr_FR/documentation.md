@@ -1,4 +1,4 @@
-# plugin-GPS-Traker
+# plugin-GPS-Tracker
 
 ## Fonctions
 
@@ -30,7 +30,7 @@ Par source Github:
   * Utilisateur ou organisation du dépôt : lelas33
   * Nom du dépôt : plugin_gps_tracker
   * Branche : master
-* Lorsque l'installation est finie, faire un refresh de la page. Le plugin "GPS-Traker" doit apparaitre.
+* Lorsque l'installation est finie, faire un refresh de la page. Le plugin "GPS-Tracker" doit apparaitre.
 * Sélectionner le plugin et l'activer.
 
 

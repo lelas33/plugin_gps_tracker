@@ -1,10 +1,10 @@
 <div style="width:180px;height:150px;" class="cmd cmd-widget #history# tooltips" data-type="info" data-subtype="string" data-cmd_id="#id#" data-cmd_uid="#uid#" data-version="#version#" data-eqLogic_id="#eqLogic_id#">
   <!-- Fichiers Javascript -->
-  <link rel="stylesheet" href="plugins/gps_traker/3rdparty/leaflet_v1.7.1/leaflet.css" />
+  <link rel="stylesheet" href="plugins/gps_tracker/3rdparty/leaflet_v1.7.1/leaflet.css" />
   <style type="text/css">
     #macarte_gpstr_#id# { height:130px; }
   </style>
-  <script src="plugins/gps_traker/3rdparty/leaflet_v1.7.1/leaflet.js"></script>
+  <script src="plugins/gps_tracker/3rdparty/leaflet_v1.7.1/leaflet.js"></script>
   <div id="macarte_gpstr_#id#">
     <!-- Ici s'affichera la carte -->
 	</div>
@@ -40,7 +40,7 @@
       marker_gpstr_#id# = L.marker([lat, lon]).addTo(carte_gpstr_#id#);
       carte_gpstr_#id#.on('click', ClicOnMap_gpstr);
       function ClicOnMap_gpstr(){
-          $('#md_modal').dialog({title: "Vue carte"}).load('index.php?v=d&plugin=gps_traker&modal=modal.view_map&eq_id='+eq_id).dialog('open');
+          $('#md_modal').dialog({title: "Vue carte"}).load('index.php?v=d&plugin=gps_tracker&modal=modal.view_map&eq_id='+eq_id).dialog('open');
       }
     }
     var carte_gpstr_#id# = null;

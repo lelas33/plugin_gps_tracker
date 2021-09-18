@@ -35,13 +35,13 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
   // -----------
   $eq = eqLogic::byId(intval($eq_id));
   if ($eq->getIsEnable()) {
-    $traker_type = $eq->getConfiguration("type_traker");
+    $tracker_type = $eq->getConfiguration("type_tracker");
     $data_dir = "";
-    if ($traker_type == "TKS") {
+    if ($tracker_type == "TKS") {
       $imei_id     = $eq->getConfiguration("tkstar_imei");
       $data_dir = "tks_".$imei_id;
     }
-    else if ($traker_type == "JCN") {
+    else if ($tracker_type == "JCN") {
       $jd_getposition_cmd  = $eq->getConfiguration("cmd_jc_position");
       $data_dir = "jcn_".str_replace ('#', '', $jd_getposition_cmd);
     }
@@ -80,7 +80,7 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
     }
   }
   fclose($fcar);
-  log::add('gps_traker', 'debug', 'Ajax:get_car_trips:nb_lines trips =>'.$line);
+  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:nb_lines trips =>'.$line);
 
 
   // Lecture des points GPS pour ces trajets
@@ -107,7 +107,7 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
         }
       }
       else {
-        log::add('gps_traker', 'error', 'Ajax:get_car_trips: Erreur dans le fichier gps.log, à la ligne:'.$line_all);
+        log::add('gps_tracker', 'error', 'Ajax:get_car_trips: Erreur dans le fichier gps.log, à la ligne:'.$line_all);
       }
       $line_all = $line_all + 1;
     }
@@ -117,7 +117,7 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
   $latitute=config::byKey("info::latitude");
   $longitude=config::byKey("info::longitude");
   $cars_dt["home"] = $latitute.",".$longitude;
-  log::add('gps_traker', 'debug', 'Ajax:get_car_trips:nb_lines points=>'.$line);
+  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:nb_lines points=>'.$line);
   return;
 }
 
@@ -129,7 +129,7 @@ function get_current_position($eq_id)
 {
   $eq = eqLogic::byId(intval($eq_id));
   if ($eq->getIsEnable()) {
-    $traker_type = $eq->getConfiguration("type_traker");
+    $tracker_type = $eq->getConfiguration("type_tracker");
   }
   else {
     return;
@@ -139,39 +139,39 @@ function get_current_position($eq_id)
   $current_position["status"] = "OK";
 
   // Recuperation des donnees du traceur GPS, selon son type
-  if ($traker_type == "TKS") {
+  if ($tracker_type == "TKS") {
     $tk_account  = $eq->getConfiguration("tkstar_account");
     $tk_password = $eq->getConfiguration("tkstar_password");
     $cmd_record_period = $eq->getCmd(null, "record_period");
     $last_login_token = $cmd_record_period->getConfiguration('save_auth');
     if ((!isset($last_login_token)) || ($last_login_token == ""))
       $last_login_token = NULL;
-    $session_gps_traker = new api_tkstar();
-    $session_gps_traker->login($tk_account, $tk_password, $last_login_token);
+    $session_gps_tracker = new api_tkstar();
+    $session_gps_tracker->login($tk_account, $tk_password, $last_login_token);
     if ($last_login_token == NULL) {
-      $login_token = $session_gps_traker->tkstar_api_login();   // Authentification
+      $login_token = $session_gps_tracker->tkstar_api_login();   // Authentification
       if ($login_token["status"] != "OK") {
-        log::add('gps_traker','error', $traker_name."->Erreur Login API Traceur GPS (Pas de session en cours)");
+        log::add('gps_tracker','error', $tracker_name."->Erreur Login API Traceur GPS (Pas de session en cours)");
         return;  // Erreur de login API Traceur GPS
       }
       $cmd_record_period->setConfiguration ('save_auth', $login_token);
       $cmd_record_period->save();
-      log::add('gps_traker','info', $traker_name."->Pas de session en cours => New login");
+      log::add('gps_tracker','info', $tracker_name."->Pas de session en cours => New login");
     }
-    else if ($session_gps_traker->state_login() == 0) {
-      $login_token = $session_gps_traker->tkstar_api_login();   // Authentification
+    else if ($session_gps_tracker->state_login() == 0) {
+      $login_token = $session_gps_tracker->tkstar_api_login();   // Authentification
       if ($login_token["status"] != "OK") {
-        log::add('gps_traker','error', $traker_name."->Erreur Login API Traceur GPS (Session expirée)");
+        log::add('gps_tracker','error', $tracker_name."->Erreur Login API Traceur GPS (Session expirée)");
         return;  // Erreur de login API Traceur GPS
       }
       $cmd_record_period->setConfiguration ('save_auth', $login_token);
       $cmd_record_period->save();
-      log::add('gps_traker','info', $traker_name."->Session expirée => New login");
+      log::add('gps_tracker','info', $tracker_name."->Session expirée => New login");
     }
     // Capture des donnes courantes issues du GPS
-    $ret = $session_gps_traker->tkstar_api_getdata();
+    $ret = $session_gps_tracker->tkstar_api_getdata();
     if ($ret["status"] == "KO") {
-      log::add('gps_traker','error', $traker_name."->Erreur Login API Traceur GPS (Access data)");
+      log::add('gps_tracker','error', $tracker_name."->Erreur Login API Traceur GPS (Access data)");
       $lat = 0;
       $lon = 0;
       }
@@ -182,7 +182,7 @@ function get_current_position($eq_id)
       $current_position["status"] = "KO";
     }
   }
-  else if ($traker_type == "JCN") {
+  else if ($tracker_type == "JCN") {
     // execution commande position pour l'objet suivit (Jeedom Connect)
     $jd_getposition_cmdname = str_replace('#', '', $eq->getConfiguration('cmd_jc_position'));
     $jd_getposition_cmd  = cmd::byId($jd_getposition_cmdname);
@@ -190,7 +190,7 @@ function get_current_position($eq_id)
       throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
     }
     $gps_position = $jd_getposition_cmd->execCmd();
-    // log::add('gps_traker','debug', $traker_name."->gps_position: ".$gps_position);
+    // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
     $gps_array = explode(",", $gps_position);
     $lat = floatval($gps_array[0]);
     $lon = floatval($gps_array[1]);
@@ -214,13 +214,13 @@ function get_car_trips_stats($eq_id)
   // -----------
   $eq = eqLogic::byId(intval($eq_id));
   if ($eq->getIsEnable()) {
-    $traker_type = $eq->getConfiguration("type_traker");
+    $tracker_type = $eq->getConfiguration("type_tracker");
     $data_dir = "";
-    if ($traker_type == "TKS") {
+    if ($tracker_type == "TKS") {
       $imei_id     = $eq->getConfiguration("tkstar_imei");
       $data_dir = "tks_".$imei_id;
     }
-    else if ($traker_type == "JCN") {
+    else if ($tracker_type == "JCN") {
       $jd_getposition_cmd  = $eq->getConfiguration("cmd_jc_position");
       $data_dir = "jcn_".str_replace ('#', '', $jd_getposition_cmd);
     }
@@ -316,7 +316,7 @@ try {
     $eq_id = init('eq_id');
     $ts_start = init('param')[0];
     $ts_end   = init('param')[1];
-    log::add('gps_traker', 'info', 'Ajax:getTripData. (eq_id='.$eq_id.')');
+    log::add('gps_tracker', 'info', 'Ajax:getTripData. (eq_id='.$eq_id.')');
     // Param 0 et 1 sont les timestamp de debut et fin de la periode de log demandée
     get_car_trips_gps($eq_id, intval ($ts_start), intval ($ts_end));
     $ret_json = json_encode ($cars_dt);
@@ -325,7 +325,7 @@ try {
 
   else if (init('action') == 'getTripStats') {
     $eq_id = init('eq_id');
-    log::add('gps_traker', 'info', 'Ajax:getTripStats. (eq_id='.$eq_id.')');
+    log::add('gps_tracker', 'info', 'Ajax:getTripStats. (eq_id='.$eq_id.')');
     $trip_stat = get_car_trips_stats($eq_id);
     $ret_json = json_encode ($trip_stat);
     ajax::success($ret_json);
@@ -333,7 +333,7 @@ try {
 
   else if (init('action') == 'getCurrentPosition') {
     $eq_id = init('eq_id');
-    log::add('gps_traker', 'info', 'Ajax:getCurrentPosition. (eq_id='.$eq_id.')');
+    log::add('gps_tracker', 'info', 'Ajax:getCurrentPosition. (eq_id='.$eq_id.')');
     $current_position = get_current_position($eq_id);
     $ret_json = json_encode ($current_position);
     ajax::success($ret_json);
@@ -341,7 +341,7 @@ try {
 
   else if (init('action') == 'setMileage') {
     $eq_id = init('eq_id');
-    log::add('gps_traker', 'info', 'Ajax:setMileage. (eq_id='.$eq_id.')');
+    log::add('gps_tracker', 'info', 'Ajax:setMileage. (eq_id='.$eq_id.')');
     $new_mileage = init('param')[0];
     $ret = set_mileage($eq_id, $new_mileage);
     $ret_json = json_encode ($ret);
@@ -349,7 +349,7 @@ try {
     }
   else if (init('action') == 'getImagePath') {
     $eq_id = init('eq_id');
-    log::add('gps_traker', 'info', 'Ajax:getImagePath. (eq_id='.$eq_id.')');
+    log::add('gps_tracker', 'info', 'Ajax:getImagePath. (eq_id='.$eq_id.')');
 
     $data_dir = "";
     $eq = eqLogic::byId(intval($eq_id));
@@ -357,18 +357,18 @@ try {
       ajax::error("Invalid ID");
     }
     else if ($eq->getIsEnable()) {
-      $traker_type = $eq->getConfiguration("type_traker");
-      if ($traker_type == "TKS") {
+      $tracker_type = $eq->getConfiguration("type_tracker");
+      if ($tracker_type == "TKS") {
         $imei_id     = $eq->getConfiguration("tkstar_imei");
         $data_dir = "tks_".$imei_id;
       }
-      else if ($traker_type == "JCN") {
+      else if ($tracker_type == "JCN") {
         $jd_getposition_cmd  = $eq->getConfiguration("cmd_jc_position");
         $data_dir = "jcn_".str_replace ('#', '', $jd_getposition_cmd);
       }
     }
-    $path = "plugins/gps_traker/data/".$data_dir."/img.png";
-    log::add('gps_traker', 'info', 'Ajax:getImagePath =>'.$path);
+    $path = "plugins/gps_tracker/data/".$data_dir."/img.png";
+    log::add('gps_tracker', 'info', 'Ajax:getImagePath =>'.$path);
     ajax::success($path);
     }
     

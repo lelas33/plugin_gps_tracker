@@ -18,11 +18,11 @@
 
 require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
-function gps_traker_install() {
-  $cron = cron::byClassAndFunction('gps_traker', 'pull');
+function gps_tracker_install() {
+  $cron = cron::byClassAndFunction('gps_tracker', 'pull');
 	if ( ! is_object($cron)) {
     $cron = new cron();
-    $cron->setClass('gps_traker');
+    $cron->setClass('gps_tracker');
     $cron->setFunction('pull');
     $cron->setEnable(1);
     $cron->setDeamon(0);
@@ -31,14 +31,14 @@ function gps_traker_install() {
 	}
 }
 
-function gps_traker_update() {
-	foreach (eqLogic::byType('gps_traker') as $eqLogic) {
+function gps_tracker_update() {
+	foreach (eqLogic::byType('gps_tracker') as $eqLogic) {
 		$eqLogic->save();
 	}
-  $cron = cron::byClassAndFunction('gps_traker', 'pull');
+  $cron = cron::byClassAndFunction('gps_tracker', 'pull');
 	if ( ! is_object($cron)) {
     $cron = new cron();
-    $cron->setClass('gps_traker');
+    $cron->setClass('gps_tracker');
     $cron->setFunction('pull');
     $cron->setEnable(1);
     $cron->setDeamon(0);
@@ -47,8 +47,8 @@ function gps_traker_update() {
 	}
 }
 
-function gps_traker_remove() {
-  $cron = cron::byClassAndFunction('gps_traker', 'pull');
+function gps_tracker_remove() {
+  $cron = cron::byClassAndFunction('gps_tracker', 'pull');
   if (is_object($cron)) {
   $cron->stop();
     $cron->remove();

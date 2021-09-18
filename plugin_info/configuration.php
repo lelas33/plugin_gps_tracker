@@ -22,4 +22,4 @@ if (!isConnect('admin')) {
 }
 ?>
 
-<?php include_file('desktop', 'gps_traker', 'js', 'gps_traker'); ?>
+<?php include_file('desktop', 'gps_tracker', 'js', 'gps_tracker'); ?>

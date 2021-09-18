@@ -30,17 +30,17 @@ try {
     }
 
   // Copy images received
-  log::add('gps_traker', 'info', 'Ajax:upload images');
+  log::add('gps_tracker', 'info', 'Ajax:upload images');
   $dbg_msg = json_encode ($_FILES)."\n";
-  // log::add('gps_traker', 'info', 'Ajax:upload images, files=>'.$dbg_msg);
+  // log::add('gps_tracker', 'info', 'Ajax:upload images, files=>'.$dbg_msg);
   // $dbg_msg = json_encode ($_POST)."\n";
-  // log::add('gps_traker', 'info', 'Ajax:upload images, post=>'.$dbg_msg);
+  // log::add('gps_tracker', 'info', 'Ajax:upload images, post=>'.$dbg_msg);
   // $srv_path = $_POST["path"];
   if ($_FILES["file"]["error"] == UPLOAD_ERR_OK) {
       $name = $_FILES["file"]["name"];
-      // log::add('gps_traker', 'info', 'Ajax:upload images : name='.$name);
+      // log::add('gps_tracker', 'info', 'Ajax:upload images : name='.$name);
       $temp_fn = dirname(__FILE__).TMP_IMG_FILE;
-      // log::add('gps_traker', 'info', 'Ajax:upload images : TMP_IMG_DIR='.$temp_fn);
+      // log::add('gps_tracker', 'info', 'Ajax:upload images : TMP_IMG_DIR='.$temp_fn);
       $ret = move_uploaded_file( $_FILES["file"]["tmp_name"], $temp_fn);
       $ret_json = json_encode ($ret);
       ajax::success($ret_json);

@@ -2,7 +2,7 @@
 if (!isConnect('admin')) {
     throw new Exception('{{401 - Accès non autorisé}}');
 }
-$plugin = plugin::byId('gps_traker');
+$plugin = plugin::byId('gps_tracker');
 sendVarToJS('eqType', $plugin->getId());
 $eqLogics = eqLogic::byType($plugin->getId());
 ?>
@@ -71,7 +71,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                         <div class="form-group">
                             <label class="col-lg-2 control-label">{{Type de traceur GPS}}</label>
                             <div class="col-lg-3">
-                              <select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="type_traker">
+                              <select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="type_tracker">
                                   <option value="TKS">{{Traceur TKSTAR TK905}}</option>
                                   <option value="JCN">{{Application JeedomConnect}}</option>
                               </select>
@@ -189,5 +189,5 @@ $eqLogics = eqLogic::byType($plugin->getId());
     </div>
 </div>
 
-<?php include_file('desktop', 'gps_traker', 'js', 'gps_traker'); ?>
+<?php include_file('desktop', 'gps_tracker', 'js', 'gps_tracker'); ?>
 <?php include_file('core', 'plugin.template', 'js'); ?>
