@@ -48,12 +48,12 @@ Pour le traceur TKSTAR:
 * Le Numéro IMEI / ID du traceur
 * Les paramètres de login au compte associé. (Login / mot de passe)
 
-Pour le traceur Jeedom connect, il faut saisir les 3 paramètres suivants qui sont des champs "info" de votre équipement Téléphone dans le plugin JeedomConnect.
-* Activité  : Type de trajet en cours
+Pour le traceur Jeedom connect, il faut saisir le paramètre suivants qui est un champ "info" de votre équipement Téléphone dans le plugin JeedomConnect.
 * Position : Position GPS courante
-* Batterie : Etat de la batterie du téléphone
 
-Si le paramètre "Ajouter altitude à la position" est validé dans l'équipement JeedomConnect, il sera alors possible de visualiser la coupe de profil des trajets.<br>
+Il faut activer l'option "Ajouter données à la position" dans l'équipement JeedomConnect.<br>
+Cela permettra d'ajouter l'altitude, l'activité et le niveau de batterie aux informations de position.<br>
+Il sera donc possible de visualiser la coupe de profil des trajets.<br>
 
 La page du panel à besoin de connaitre les coordonnées GPS de stationnement habituel de la voiture afin de centrer la carte pour l’affichage des trajets. <br>
 Pour cela, il faut renseigner ces coordonnées GPS dans la page de configuration de jeedom.<br>

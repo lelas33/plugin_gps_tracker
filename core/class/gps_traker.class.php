@@ -316,22 +316,17 @@ class gps_traker extends eqLogic {
             throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
           }
           $gps_position = $jd_getposition_cmd->execCmd();
-          // log::add('gps_traker','debug', $traker_name."->gps_position: ".$gps_position);
+          # log::add('gps_traker','debug', $traker_name."->gps_position: ".$gps_position);
           $gps_array = explode(",", $gps_position);
+          if (count($gps_array) < 5) {
+            throw new Exception(__('Il manque des informations dans la commande GPS position', __FILE__));
+          }
           $lat = floatval($gps_array[0]);
           $lon = floatval($gps_array[1]);
-          if (count($gps_array) == 3)
-            $alt = floatval($gps_array[2]);
-          else
-            $alt = 0;
+          $alt = floatval($gps_array[2]);
+          $activite   = $gps_array[3];
+          $batt_level = $gps_array[4];
           $vitesse = 0;
-          // execution commande activite pour l'objet suivi (Jeedom Connect)
-          $jd_getactivite_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jc_activite'));
-          $jd_getactivite_cmd  = cmd::byId($jd_getactivite_cmdname);
-          if (!is_object($jd_getactivite_cmd)) {
-            throw new Exception(__('Impossible de trouver la commande gps activité', __FILE__));
-          }
-          $activite = $jd_getactivite_cmd->execCmd();
           if ($activite == "still")
             $kinetic_moving = 0;
           elseif ($activite == "on_foot")
@@ -344,13 +339,6 @@ class gps_traker extends eqLogic {
             $kinetic_moving = 4;
           else
             $kinetic_moving = 0;
-          // execution commande batterie pour l'objet suivi (Jeedom Connect)
-          $jd_getbatterie_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jc_batterie'));
-          $jd_getbatterie_cmd  = cmd::byId($jd_getbatterie_cmdname);
-          if (!is_object($jd_getbatterie_cmd)) {
-            throw new Exception(__('Impossible de trouver la commande gps batterie', __FILE__));
-          }
-          $batt_level = $jd_getbatterie_cmd->execCmd();
         }
         // Traitement des informations retournees
         // log::add('gps_traker','debug', $traker_name."->MAJ des données du traceur GPS: ".$data_dir);

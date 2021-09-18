@@ -140,9 +140,11 @@ function get_current_position($eq_id)
 
   // Recuperation des donnees du traceur GPS, selon son type
   if ($traker_type == "TKS") {
+    $tk_account  = $eq->getConfiguration("tkstar_account");
+    $tk_password = $eq->getConfiguration("tkstar_password");
     $cmd_record_period = $eq->getCmd(null, "record_period");
     $last_login_token = $cmd_record_period->getConfiguration('save_auth');
-    if ((!isset($last_login_token)) || ($last_login_token == "") || ($rfh==1))
+    if ((!isset($last_login_token)) || ($last_login_token == ""))
       $last_login_token = NULL;
     $session_gps_traker = new api_tkstar();
     $session_gps_traker->login($tk_account, $tk_password, $last_login_token);
@@ -170,11 +172,15 @@ function get_current_position($eq_id)
     $ret = $session_gps_traker->tkstar_api_getdata();
     if ($ret["status"] == "KO") {
       log::add('gps_traker','error', $traker_name."->Erreur Login API Traceur GPS (Access data)");
-      return;  // Erreur de login API Traceur GPS
+      $lat = 0;
+      $lon = 0;
       }
-    // extraction des donnees utiles
-    $lat = floatval($ret["result"]->lat);
-    $lon = floatval($ret["result"]->lng);
+    else {
+      // extraction des donnees utiles
+      $lat = floatval($ret["result"]->lat);
+      $lon = floatval($ret["result"]->lng);
+      $current_position["status"] = "KO";
+    }
   }
   else if ($traker_type == "JCN") {
     // execution commande position pour l'objet suivit (Jeedom Connect)
@@ -196,9 +202,7 @@ function get_current_position($eq_id)
   $latitute=config::byKey("info::latitude");
   $longitude=config::byKey("info::longitude");
   $current_position["home"] = $latitute.",".$longitude;
-  // Statut
-  if ((floatval($ret_sts["result"]->lat) == 0) && (floatval($ret_sts["result"]->lng) == 0))
-    $current_position["status"] = "KO";
+
   return ($current_position);
 }
 // ===========================================================
