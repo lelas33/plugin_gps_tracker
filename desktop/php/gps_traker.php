@@ -153,18 +153,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                         </div>
                         <div class="form-group">
                             <label class="col-lg-2 control-label"></label>
-                            <label class="col-lg-3"><br>{{Informations complémentaires pour le traceur JeedomConnect}}</label>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">{{Activité}}</label>
-                            <div class="col-lg-3">
-                              <div class="input-group">
-                                <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_jc_activite"/>
-                                <span class="input-group-btn">
-                                  <a class="btn btn-default listCmdInfoOther roundedRight"><i class="fas fa-list-alt"></i></a>
-                                </span>
-                              </div>
-                            </div>
+                            <label class="col-lg-3"><br>{{Information complémentaire pour le traceur JeedomConnect}}</label>
                         </div>
                         <div class="form-group">
                             <label class="col-lg-2 control-label">{{Position}}</label>
@@ -173,17 +162,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
                                 <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_jc_position"/>
                                 <span class="input-group-btn">
                                   <a class="btn btn-default listCmdInfoOther roundedRight"><i class="fas fa-list-alt"></i></a>
-                                </span>
-                              </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">{{Batterie}}</label>
-                            <div class="col-lg-3">
-                              <div class="input-group">
-                                <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_jc_batterie"/>
-                                <span class="input-group-btn">
-                                  <a class="btn btn-default listCmdInfoNumeric roundedRight"><i class="fas fa-list-alt"></i></a>
                                 </span>
                               </div>
                             </div>
