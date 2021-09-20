@@ -55,135 +55,181 @@ $eqLogics = eqLogic::byType($plugin->getId());
 		</ul>
 		<div class="tab-content" style="height:calc(100% - 50px);overflow:auto;overflow-x: hidden;">
 			<div role="tabpanel" class="tab-pane active" id="eqlogictab">
-                <form class="form-horizontal">
-                    <fieldset>
-                        <legend>
-                           <i class="fa fa-arrow-circle-left eqLogicAction cursor" data-action="returnToThumbnailDisplay"></i> {{Général}}
-                           <i class='fa fa-cogs eqLogicAction pull-right cursor expertModeVisible' data-action='configure'></i>
-                       </legend>
-			                 <div class="form-group">
-                            <label class="col-lg-2 control-label">{{Nom de l'équipement}}</label>
-                            <div class="col-lg-3">
-                                <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
-                                <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="{{Nom de l'objet suivi}}"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">{{Type de traceur GPS}}</label>
-                            <div class="col-lg-3">
-                              <select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="type_tracker">
-                                  <option value="TKS">{{Traceur TKSTAR TK905}}</option>
-                                  <option value="JCN">{{Application JeedomConnect}}</option>
-                              </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label" >{{Objet parent}}</label>
-                            <div class="col-lg-3">
-                                <select class="form-control eqLogicAttr" data-l1key="object_id">
-                                    <option value="">{{Aucun}}</option>
-                                    <?php
-                                    foreach (jeeObject::all() as $object) {
-                                        echo '<option value="' . $object->getId() . '">' . $object->getName() . '</option>'."\n";
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">{{Catégorie}}</label>
-                            <div class="col-lg-8">
-                                <?php
-                                foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value) {
-                                    echo '<label class="checkbox-inline">'."\n";
-                                    echo '<input type="checkbox" class="eqLogicAttr" data-l1key="category" data-l2key="' . $key . '" />' . $value['name'];
-                                    echo '</label>'."\n";
-                                }
-                                ?>
+        <form class="form-horizontal">
+            <fieldset>
+                <legend>
+                   <i class="fa fa-arrow-circle-left eqLogicAction cursor" data-action="returnToThumbnailDisplay"></i> {{Général}}
+                   <i class='fa fa-cogs eqLogicAction pull-right cursor expertModeVisible' data-action='configure'></i>
+               </legend>
+               <div class="form-group">
+                    <label class="col-lg-2 control-label">{{Nom de l'équipement}}</label>
+                    <div class="col-lg-3">
+                        <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
+                        <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="{{Nom de l'objet suivi}}"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label">{{Type de traceur GPS}}</label>
+                    <div class="col-lg-3">
+                      <select id="tracker_select" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="type_tracker">
+                          <option value="TKS">{{Traceur TKSTAR TK905}}</option>
+                          <option value="JCN">{{Application JeedomConnect}}</option>
+                          <option value="JMT">{{Application JeeMate}}</option>
+                      </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" >{{Objet parent}}</label>
+                    <div class="col-lg-3">
+                        <select class="form-control eqLogicAttr" data-l1key="object_id">
+                            <option value="">{{Aucun}}</option>
+                            <?php
+                            $options = '';
+                            foreach ((jeeObject::buildTree(null, false)) as $object) {
+                              $options .= '<option value="' . $object->getId() . '">' . str_repeat('&nbsp;&nbsp;', $object->getConfiguration('parentNumber')) . $object->getName() . '</option>';
+                            }
+                            echo $options;
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label">{{Catégorie}}</label>
+                    <div class="col-lg-8">
+                        <?php
+                        foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value) {
+                            echo '<label class="checkbox-inline">'."\n";
+                            echo '<input type="checkbox" class="eqLogicAttr" data-l1key="category" data-l2key="' . $key . '" />' . $value['name'];
+                            echo '</label>'."\n";
+                        }
+                        ?>
 
-                            </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-2 control-label" >{{Activer}}</label>
+                    <div class="col-md-1">
+                        <input type="checkbox" class="eqLogicAttr" data-l1key="isEnable" checked/>
+                    </div>
+                    <label class="col-lg-2 control-label" >{{Visible}}</label>
+                    <div class="col-lg-1">
+                        <input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label"></label>
+                    <label class="col-lg-3"><br>{{Image de l'objet suivi}}</label>
+                </div>
+                <div class="form-group load_image">
+                    <label class="col-lg-2 control-label"></label>
+                    <div class="col-lg-3">
+                      <span class="input-group-btn">
+                        <input type="file" accept="image/png" id="load_image_input" style="display:none;" >
+                        <a class="btn btn-primary" id="load_image_conf"><i class="fa fa-cloud-upload-alt"></i> {{Fichier Image}}</a>
+                      </span>
+                    </div>
+                    <div class="col-lg-3">
+                      <img class="pull-left" id="object_img" src="" style="max-height:250px;max-width:350px;height:auto;width:auto;"/>
+                    </div>
+                </div>
+                <div id="param_tks">
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label"></label>
+                      <label class="col-lg-4"><br>{{Informations complémentaires pour le traceur TKSTAR}}</label>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Numéro IMEI / ID}}</label>
+                      <div class="col-lg-3">
+                          <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="tkstar_imei" placeholder="{{numéro IMEI du traceur}}"/>
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Login compte Tkstar}}</label>
+                      <div class="col-lg-3">
+                          <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="tkstar_account" />
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Password compte Tkstar}}</label>
+                      <div class="col-lg-3">
+                          <input type="password" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="tkstar_password" />
+                      </div>
+                  </div>
+                </div>
+                <div id="param_jcn" style="display: none;">
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label"></label>
+                      <label class="col-lg-4"><br>{{Information complémentaire pour le traceur Appli.JeedomConnect}}</label>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Position}}</label>
+                      <div class="col-lg-4">
+                        <div class="input-group">
+                          <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_jc_position"/>
+                          <span class="input-group-btn">
+                            <a class="btn btn-default listCmdInfoOther roundedRight"><i class="fas fa-list-alt"></i></a>
+                          </span>
                         </div>
-                        <div class="form-group">
-                            <label class="col-md-2 control-label" >{{Activer}}</label>
-                            <div class="col-md-1">
-                                <input type="checkbox" class="eqLogicAttr" data-l1key="isEnable" checked/>
-                            </div>
-                            <label class="col-lg-2 control-label" >{{Visible}}</label>
-                            <div class="col-lg-1">
-                                <input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" checked/>
-                            </div>
+                      </div>
+                  </div>
+                </div>
+                <div id="param_jmt" style="display: none;">
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label"></label>
+                      <label class="col-lg-4"><br>{{Information complémentaire pour le traceur Appli.JeeMate}}</label>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Position}}</label>
+                      <div class="col-lg-4">
+                        <div class="input-group">
+                          <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_jm_position"/>
+                          <span class="input-group-btn">
+                            <a class="btn btn-default listCmdInfoOther roundedRight"><i class="fas fa-list-alt"></i></a>
+                          </span>
                         </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label"></label>
-                            <label class="col-lg-3"><br>{{Image de l'objet suivi}}</label>
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Activité}}</label>
+                      <div class="col-lg-4">
+                        <div class="input-group">
+                          <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_jm_activite"/>
+                          <span class="input-group-btn">
+                            <a class="btn btn-default listCmdInfoOther roundedRight"><i class="fas fa-list-alt"></i></a>
+                          </span>
                         </div>
-                        <div class="form-group load_image">
-                            <label class="col-lg-2 control-label"></label>
-                            <div class="col-lg-3">
-                              <span class="input-group-btn">
-                                <input type="file" accept="image/png" id="load_image_input" style="display:none;" >
-                                <a class="btn btn-primary" id="load_image_conf"><i class="fa fa-cloud-upload-alt"></i> {{Fichier Image}}</a>
-                              </span>
-                            </div>
-                            <div class="col-lg-3">
-                              <img class="pull-left" id="object_img" src="" style="max-height:250px;max-width:350px;height:auto;width:auto;"/>
-                            </div>
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Batterie}}</label>
+                      <div class="col-lg-4">
+                        <div class="input-group">
+                          <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_jm_batterie"/>
+                          <span class="input-group-btn">
+                            <a class="btn btn-default listCmdInfoNumeric roundedRight"><i class="fas fa-list-alt"></i></a>
+                          </span>
                         </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label"></label>
-                            <label class="col-lg-3"><br>{{Informations complémentaires pour le traceur TKSTAR}}</label>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">{{Numéro IMEI / ID}}</label>
-                            <div class="col-lg-3">
-                                <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="tkstar_imei" placeholder="{{numéro IMEI du traceur}}"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">{{Login compte Tkstar}}</label>
-                            <div class="col-lg-3">
-                                <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="tkstar_account" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">{{Password compte Tkstar}}</label>
-                            <div class="col-lg-3">
-                                <input type="password" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="tkstar_password" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label"></label>
-                            <label class="col-lg-3"><br>{{Information complémentaire pour le traceur JeedomConnect}}</label>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label">{{Position}}</label>
-                            <div class="col-lg-3">
-                              <div class="input-group">
-                                <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_jc_position"/>
-                                <span class="input-group-btn">
-                                  <a class="btn btn-default listCmdInfoOther roundedRight"><i class="fas fa-list-alt"></i></a>
-                                </span>
-                              </div>
-                            </div>
-                        </div>
-                    </fieldset>
-                </form>
+                      </div>
+                  </div>
+                </div>
+            </fieldset>
+        </form>
 			</div>
 			<div role="tabpanel" class="tab-pane" id="commandtab">
-                <table id="table_cmd" class="table table-bordered table-condensed">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;">#</th>
-                            <th style="width: 230px;">{{Nom}}</th>
-                            <th style="width: 110px;">{{Sous-Type}}</th>
-                            <th style="width: 100px;">{{Paramètres}}</th>
-                            <th style="width: 200px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <table id="table_cmd" class="table table-bordered table-condensed">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th style="width: 230px;">{{Nom}}</th>
+                    <th style="width: 110px;">{{Sous-Type}}</th>
+                    <th style="width: 100px;">{{Paramètres}}</th>
+                    <th style="width: 200px;"></th>
+                </tr>
+            </thead>
+            <tbody>
 
-                    </tbody>
-                </table>
+            </tbody>
+        </table>
 		   </div>
 		</div>
     </div>

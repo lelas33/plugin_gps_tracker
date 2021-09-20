@@ -68,7 +68,7 @@ class gps_tracker extends eqLogic {
                       "gps_position_lat"     => array('Position GPS Lat.',   'info',  'numeric',    "", 0, 0, "GENERIC_INFO",   'core::badge', 'core::badge'),
                       "gps_position_lon"     => array('Position GPS Lon.',   'info',  'numeric',    "", 0, 0, "GENERIC_INFO",   'core::badge', 'core::badge'),
                       "gps_dist_home"        => array('Distance maison',     'info',  'numeric',  "km", 1, 1, "GENERIC_INFO",   'core::line', 'core::line'),
-                      "kinetic_moving"       => array('Voiture en mouvement','info',  'binary',     "", 1, 1, "GENERIC_INFO",   'gps_tracker::veh_moving_gpstr', 'gps_tracker::veh_moving_gpstr')
+                      "kinetic_moving"       => array('En mouvement',        'info',  'binary',     "", 1, 1, "GENERIC_INFO",   'gps_tracker::veh_moving_gpstr', 'gps_tracker::veh_moving_gpstr')
         );
     }
 
@@ -110,6 +110,17 @@ class gps_tracker extends eqLogic {
         $data_dir = "jcn_".$jd_getposition_cmdf;
         log::add('gps_tracker','debug',"postSave: JCN-> TEL_ID=".$jd_getposition_cmdf." (données:data/".$data_dir.")" );
       }
+      // Pour les traceur JeeMate, verification de la commande "get GPS position"
+      else if ($tracker_type == "JMT") {
+        $jd_getposition_cmd  = $this->getConfiguration("cmd_jm_position");
+        if ($jd_getposition_cmd == "") {
+          log::add('gps_tracker','error',"postSave: JMT->Commande d'accès à la position GPS non definie");
+          return;
+        }
+        $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
+        $data_dir = "jmt_".$jd_getposition_cmdf;
+        log::add('gps_tracker','debug',"postSave: JMT-> TEL_ID=".$jd_getposition_cmdf." (données:data/".$data_dir.")" );
+      }
 
       // creation de la liste des commandes / infos
       foreach( $this->getListeDefaultCommandes() as $id => $data) {
@@ -141,7 +152,6 @@ class gps_tracker extends eqLogic {
             $cmd->save();
           }
           else if ($id == "photo") {
-            // $cmd->setConfiguration('listValue', 'IMEI|'.$imei_id);
             $param = $this->getId().','.$data_dir;
             $cmd->setConfiguration('listValue', 'PARAM|'.'&'.$param.'~');
             $cmd->save();
@@ -251,6 +261,15 @@ class gps_tracker extends eqLogic {
         $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
         $data_dir = "jcn_".$jd_getposition_cmdf;
       }
+      // Pour les traceur JeeMate, verification de la commande "get GPS position"
+      else if ($tracker_type == "JMT") {
+        $jd_getposition_cmd  = $this->getConfiguration("cmd_jm_position");
+        if ($jd_getposition_cmd == "") {
+          return;
+        }
+        $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
+        $data_dir = "jmt_".$jd_getposition_cmdf;
+      }
 
       // Appel API pour le statut courant du vehicule
       $fn_car_gps   = dirname(__FILE__).GPS_FILES_DIR_CL.$data_dir.'/gps.log';
@@ -316,7 +335,7 @@ class gps_tracker extends eqLogic {
             throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
           }
           $gps_position = $jd_getposition_cmd->execCmd();
-          # log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
+          // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
           $gps_array = explode(",", $gps_position);
           if (count($gps_array) < 5) {
             throw new Exception(__('Il manque des informations dans la commande GPS position', __FILE__));
@@ -339,6 +358,50 @@ class gps_tracker extends eqLogic {
             $kinetic_moving = 4;
           else
             $kinetic_moving = 0;
+        }
+        else if ($tracker_type == "JMT") {
+          // execution commande position pour l'objet suivi (JeeMate)
+          $jd_getposition_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jm_position'));
+          $jd_getposition_cmd  = cmd::byId($jd_getposition_cmdname);
+          if (!is_object($jd_getposition_cmd)) {
+            throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
+          }
+          $gps_position = $jd_getposition_cmd->execCmd();
+          // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
+          $gps_array = explode(",", $gps_position);
+          $lat = floatval($gps_array[0]);
+          $lon = floatval($gps_array[1]);
+          if (count($gps_array) == 3)
+            $alt = floatval($gps_array[2]);
+          else
+            $alt = 0;
+          $vitesse = 0;
+          // execution commande activite pour l'objet suivi (Jeedom Connect)
+          $jd_getactivite_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jm_activite'));
+          $jd_getactivite_cmd  = cmd::byId($jd_getactivite_cmdname);
+          if (!is_object($jd_getactivite_cmd)) {
+            throw new Exception(__('Impossible de trouver la commande gps activité', __FILE__));
+          }
+          $activite = $jd_getactivite_cmd->execCmd();
+          if ($activite == "still")  // Valeurs possibles: still, walking, in_vehicle
+            $kinetic_moving = 0;
+          elseif ($activite == "walking")
+            $kinetic_moving = 1;
+          // elseif ($activite == "running")
+            // $kinetic_moving = 2;
+          // elseif ($activite == "on_bicycle")
+            // $kinetic_moving = 3;
+          elseif ($activite == "in_vehicle")
+            $kinetic_moving = 4;
+          else
+            $kinetic_moving = 0;
+          // execution commande batterie pour l'objet suivi (Jeedom Connect)
+          $jd_getbatterie_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jm_batterie'));
+          $jd_getbatterie_cmd  = cmd::byId($jd_getbatterie_cmdname);
+          if (!is_object($jd_getbatterie_cmd)) {
+            throw new Exception(__('Impossible de trouver la commande gps batterie', __FILE__));
+          }
+          $batt_level = $jd_getbatterie_cmd->execCmd();
         }
         // Traitement des informations retournees
         // log::add('gps_tracker','debug', $tracker_name."->MAJ des données du traceur GPS: ".$data_dir);
@@ -366,8 +429,8 @@ class gps_tracker extends eqLogic {
         if ($gps_pts_ok == true) {
           $gps_position = $lat.",".$lon.",".$alt;
           $previous_gps_position = $cmd_gps->execCmd();
-          // log::add('gps_tracker','debug',"GPS position =>".$gps_position);
-          // log::add('gps_tracker','debug',"Refresh log previous_gps_position=".$previous_gps_position);
+          // log::add('gps_tracker','debug',$tracker_name."->Refresh:GPS position =>".$gps_position);
+          // log::add('gps_tracker','debug',$tracker_name."->Refresh:previous_gps_position=".$previous_gps_position);
           $eq_id = $this->getId();
           $cmd_gps->event($gps_position.",".$eq_id);   // ajout de l'ID plugin pour transmission au process AJAX sur serveur
           // $cmd_gps->event($gps_position);
@@ -391,9 +454,8 @@ class gps_tracker extends eqLogic {
           $lat_prev = deg2rad(floatval($previous_gps_latlon[0]));
           $lon_prev = deg2rad(floatval($previous_gps_latlon[1]));
           $dist_prev = 6371.01 * acos(sin($lat_prev)*sin($lat_veh) + cos($lat_prev)* cos($lat_veh)*cos($lon_prev - $lon_veh)); // calcul de la distance
-          // log::add('gps_tracker','debug',"Refresh log dist_prev=".$dist_prev);
           if (is_nan($dist_prev)) {
-            log::add('gps_tracker','error', $tracker_name."->Erreur sur le calcul de distance:".$dist_prev);
+            // log::add('gps_tracker','error', $tracker_name."->Erreur sur le calcul de distance:".$dist_prev);
             $dist_prev = 0.0;
           }
           $mileage = round($previous_mileage + $dist_prev, 1);

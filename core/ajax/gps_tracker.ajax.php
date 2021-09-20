@@ -45,6 +45,10 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
       $jd_getposition_cmd  = $eq->getConfiguration("cmd_jc_position");
       $data_dir = "jcn_".str_replace ('#', '', $jd_getposition_cmd);
     }
+    else if ($tracker_type == "JMT") {
+      $jd_getposition_cmd  = $eq->getConfiguration("cmd_jm_position");
+      $data_dir = "jmt_".str_replace ('#', '', $jd_getposition_cmd);
+    }
   }
   else {
     return;
@@ -195,6 +199,19 @@ function get_current_position($eq_id)
     $lat = floatval($gps_array[0]);
     $lon = floatval($gps_array[1]);
   }
+  else if ($tracker_type == "JMT") {
+    // execution commande position pour l'objet suivit (Jeedom Connect)
+    $jd_getposition_cmdname = str_replace('#', '', $eq->getConfiguration('cmd_jm_position'));
+    $jd_getposition_cmd  = cmd::byId($jd_getposition_cmdname);
+    if (!is_object($jd_getposition_cmd)) {
+      throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
+    }
+    $gps_position = $jd_getposition_cmd->execCmd();
+    // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
+    $gps_array = explode(",", $gps_position);
+    $lat = floatval($gps_array[0]);
+    $lon = floatval($gps_array[1]);
+  }
   
   $current_position["veh"]= $lat.",".$lon;
 
@@ -223,6 +240,10 @@ function get_car_trips_stats($eq_id)
     else if ($tracker_type == "JCN") {
       $jd_getposition_cmd  = $eq->getConfiguration("cmd_jc_position");
       $data_dir = "jcn_".str_replace ('#', '', $jd_getposition_cmd);
+    }
+    else if ($tracker_type == "JMT") {
+      $jd_getposition_cmd  = $eq->getConfiguration("cmd_jm_position");
+      $data_dir = "jmt_".str_replace ('#', '', $jd_getposition_cmd);
     }
   }
   else {
@@ -365,6 +386,10 @@ try {
       else if ($tracker_type == "JCN") {
         $jd_getposition_cmd  = $eq->getConfiguration("cmd_jc_position");
         $data_dir = "jcn_".str_replace ('#', '', $jd_getposition_cmd);
+      }
+      else if ($tracker_type == "JMT") {
+        $jd_getposition_cmd  = $eq->getConfiguration("cmd_jm_position");
+        $data_dir = "jmt_".str_replace ('#', '', $jd_getposition_cmd);
       }
     }
     $path = "plugins/gps_tracker/data/".$data_dir."/img.png";

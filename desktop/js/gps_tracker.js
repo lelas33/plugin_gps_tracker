@@ -18,6 +18,26 @@ $(".listCmdInfoOther").on('click', function () {
   });
 });
 
+// Selection du type de traceur => affichage des parametres associes
+$( "#tracker_select" ).change(function() {
+  sel_tracker = $("#tracker_select option:selected").val();
+  if (sel_tracker == "TKS") {
+    $("#param_tks").show();
+    $("#param_jcn").hide();
+    $("#param_jmt").hide();
+  }
+  else if (sel_tracker == "JCN") {
+    $("#param_tks").hide();
+    $("#param_jcn").show();
+    $("#param_jmt").hide();
+  }
+  else if (sel_tracker == "JMT") {
+    $("#param_tks").hide();
+    $("#param_jcn").hide();
+    $("#param_jmt").show();
+  }
+});
+
 // Chargement image de l'objet suivi
 $('.load_image').off('click', '#load_image_conf').on('click', '#load_image_conf', function() {
   // alert("Click load_image_conf");
@@ -83,7 +103,6 @@ $('.eqLogicAttr[data-l1key=id]').change(function() {
   });
 
 });
-
 
 
 function addCmdToTable(_cmd) {
