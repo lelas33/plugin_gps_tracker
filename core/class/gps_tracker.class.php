@@ -234,7 +234,115 @@ class gps_tracker extends eqLogic {
         $eqLogic->periodic_state(0);
       }
     }
+
+    // Calcul de la distance entre 2 position GPS
+    public function distance_compute ($lat0, $lon0, $lat1, $lon1) {
+      $lat0r = deg2rad($lat0);
+      $lon0r = deg2rad($lon0);
+      $lat1r = deg2rad($lat1);
+      $lon1r = deg2rad($lon1);
+      $distance = 6371.01 * acos(sin($lat0r)*sin($lat1r) + cos($lat0r)* cos($lat1r)*cos($lon0r - $lon1r)); // calcul de la distance
+      // $dist_home = round($distance, 3);
+      if (is_nan($distance)) {
+        // log::add('gps_tracker','error', $tracker_name."->Erreur sur le calcul de distance:".$dist_prev);
+        $distance = 0.0;
+      }
+      return($distance);
+    }
+
+    // Analyse des donnees du GPS JeedomConnect
+    public function analyse_jcn ($date, $gps_posi, $prev_posi, $prev_mlg) {
+      $gps_array = explode(",", $gps_posi);
+      if (count($gps_array) < 5) {
+        throw new Exception(__('Il manque des informations dans la commande GPS position', __FILE__));
+      }
+      $lat = floatval($gps_array[0]);
+      $lon = floatval($gps_array[1]);
+      $alt = floatval($gps_array[2]);
+      $activite   = $gps_array[3];
+      $batt_level = $gps_array[4];
+      $vitesse = 0;
+      if ($activite == "still")
+        $kinetic_moving = 0;
+      elseif ($activite == "on_foot")
+        $kinetic_moving = 1;
+      elseif ($activite == "running")
+        $kinetic_moving = 2;
+      elseif ($activite == "on_bicycle")
+        $kinetic_moving = 3;
+      elseif ($activite == "in_vehicle")
+        $kinetic_moving = 4;
+      else
+        $kinetic_moving = 0;
+      // Point GPS precedent
+      $gps_array = explode(",", $prev_posi);
+      $prev_lat = floatval($gps_array[0]);
+      $prev_lon = floatval($gps_array[1]);
+      // Distance depuis le point précédent
+      $dist = $this->distance_compute ($lat, $lon, $prev_lat, $prev_lon);
+
+      // Calcul du kilometrage courant
+      $mlg = round($prev_mlg + $dist, 1);
+      // Mise au format du fichier a generer
+      $ret_gps["ts"] = $date;
+      $ret_gps["posi"] = $lat.",".$lon.",".$alt;
+      $ret_gps["misc"] = $vitesse.",".$mlg.",".$kinetic_moving;
+      $ret_gps["batt"] = $batt_level;
+      $ret_gps["lat"]  = $lat;
+      $ret_gps["lon"]  = $lon;
+      $ret_gps["vit"]  = $vitesse;
+      $ret_gps["mlg"]  = $mlg;
+      $ret_gps["kinect"] = $kinetic_moving;
+      return($ret_gps);
+    }
     
+    // Analyse des donnees du GPS JeeMate
+    public function analyse_jmt ($date, $gps_posi, $prev_posi, $activite, $prev_mlg) {
+      $gps_array = explode(",", $gps_posi);
+      if (count($gps_array) < 2) {
+        throw new Exception(__('Il manque des informations dans la commande GPS position', __FILE__));
+      }
+      $lat = floatval($gps_array[0]);
+      $lon = floatval($gps_array[1]);
+      if (count($gps_array) == 3)
+        $alt = floatval($gps_array[2]);
+      else
+        $alt = 0;
+      $vitesse = 0;
+      if ($activite == "still")  // Valeurs possibles: still, walking, in_vehicle
+        $kinetic_moving = 0;
+      elseif ($activite == "walking")
+        $kinetic_moving = 1;
+      // elseif ($activite == "running")
+        // $kinetic_moving = 2;
+      // elseif ($activite == "on_bicycle")
+        // $kinetic_moving = 3;
+      elseif ($activite == "in_vehicle")
+        $kinetic_moving = 4;
+      else
+        $kinetic_moving = 0;
+      // Point GPS precedent
+      $gps_array = explode(",", $prev_posi);
+      $prev_lat = floatval($gps_array[0]);
+      $prev_lon = floatval($gps_array[1]);
+      // Distance depuis le point précédent
+      $dist = $this->distance_compute ($lat, $lon, $prev_lat, $prev_lon);
+
+      // Calcul du kilometrage courant
+      $mlg = round($prev_mlg + $dist, 1);
+      // Mise au format du fichier a generer
+      $ret_gps["ts"] = $date;
+      $ret_gps["posi"] = $lat.",".$lon.",".$alt;
+      $ret_gps["misc"] = $vitesse.",".$mlg.",".$kinetic_moving;
+      $ret_gps["batt"] = $batt_level;
+      $ret_gps["lat"]  = $lat;
+      $ret_gps["lon"]  = $lon;
+      $ret_gps["vit"]  = $vitesse;
+      $ret_gps["mlg"]  = $mlg;
+      $ret_gps["kinect"] = $kinetic_moving;
+      return($ret_gps);
+    }
+
     // Lecture des statuts du vehicule connecté
     public function periodic_state($rfh) {
       $tracker_type = $this->getConfiguration("type_tracker");
@@ -286,8 +394,16 @@ class gps_tracker extends eqLogic {
        
         // Toutes les mn => Mise à jour des informations du traceur
         // ========================================================
+        $cmd_mlg = $this->getCmd(null, "kilometrage");
+        $previous_mileage = $cmd_mlg->execCmd();
+        $previous_ts = $cmd_mlg->getConfiguration('prev_ctime');
+        $ctime = time();
+        $cmd_gps = $this->getCmd(null, "gps_position");
+        $previous_gps_position = $cmd_gps->execCmd();
+
         // Recuperation des donnees du traceur GPS, selon son type
         if ($tracker_type == "TKS") {
+          // ------- Traceur TKSTAR ------
           $last_login_token = $cmd_record_period->getConfiguration('save_auth');
           if ((!isset($last_login_token)) || ($last_login_token == "") || ($rfh==1))
             $last_login_token = NULL;
@@ -319,6 +435,7 @@ class gps_tracker extends eqLogic {
             log::add('gps_tracker','error', $tracker_name."->Erreur Login API Traceur GPS (Access data)");
             return;  // Erreur de login API Traceur GPS
             }
+          $gps_position_hist = [];
           // extraction des donnees utiles
           $lat = floatval($ret["result"]->lat);
           $lon = floatval($ret["result"]->lng);
@@ -326,56 +443,60 @@ class gps_tracker extends eqLogic {
           $vitesse = round(floatval($ret["result"]->speed), 1);
           $kinetic_moving = ($ret["result"]->isStop == "1") ? 0 : 1;
           $batt_level = $ret["result"]->battery;
+          // Calcul distance point precedent
+          $previous_gps_latlon = explode(",", $previous_gps_position);
+          $dist_prev = $this->distance_compute(floatval($previous_gps_latlon[0]), floatval($previous_gps_latlon[1]), $lat, $lon);
+          $new_mlg = round($previous_mileage + $dist_prev, 1);
+          $record1 = $lat.",".$lon.",".$alt;
+          $record2 = $vitesse.",".$new_mlg.",".$kinetic_moving;
         }
         else if ($tracker_type == "JCN") {
-          // execution commande position pour l'objet suivi (Jeedom Connect)
+          // ------- Traceur Jeedom Connect ------
+          // execution commande position pour l'objet suivi
           $jd_getposition_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jc_position'));
           $jd_getposition_cmd  = cmd::byId($jd_getposition_cmdname);
           if (!is_object($jd_getposition_cmd)) {
             throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
           }
+          // Capture l'historique de la derniere minute
+          $debut = date("Y-m-d H:i:s", strtotime("Now")-60);
+          $fin = date("Y-m-d H:i:s", strtotime("Now")); 
+          $cmdId = $jd_getposition_cmd->getId();
+          $values = history::all($cmdId, $debut, $fin);
+          $gps_position_hist = [];
+          $prev_posi = $previous_gps_position;
+          $current_milleage = $previous_mileage;
+          foreach ($values as $value) {
+            $date = $value->getDatetime();
+            $posi = $value->getValue();
+            $ret_gps = $this->analyse_jcn (strtotime($date), $posi, $prev_posi, $current_milleage);
+            $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
+            array_push($gps_position_hist, $record);
+            log::add('gps_tracker','debug', $tracker_name."->history: record ".$record);
+            $prev_posi = $posi;
+            $current_milleage = $ret_gps["mlg"];
+          }
+          // Capture la position courante
           $gps_position = $jd_getposition_cmd->execCmd();
           // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
-          $gps_array = explode(",", $gps_position);
-          if (count($gps_array) < 5) {
-            throw new Exception(__('Il manque des informations dans la commande GPS position', __FILE__));
-          }
-          $lat = floatval($gps_array[0]);
-          $lon = floatval($gps_array[1]);
-          $alt = floatval($gps_array[2]);
-          $activite   = $gps_array[3];
-          $batt_level = $gps_array[4];
-          $vitesse = 0;
-          if ($activite == "still")
-            $kinetic_moving = 0;
-          elseif ($activite == "on_foot")
-            $kinetic_moving = 1;
-          elseif ($activite == "running")
-            $kinetic_moving = 2;
-          elseif ($activite == "on_bicycle")
-            $kinetic_moving = 3;
-          elseif ($activite == "in_vehicle")
-            $kinetic_moving = 4;
-          else
-            $kinetic_moving = 0;
+          $ret_gps = $this->analyse_jcn ($ctime, $gps_position, $prev_posi, $current_milleage);
+          $lat = $ret_gps["lat"];
+          $lon = $ret_gps["lon"];
+          $vitesse = $ret_gps["vit"];
+          $batt_level     = $ret_gps["batt"];
+          $kinetic_moving = $ret_gps["kinect"];
+          $new_mlg = $ret_gps["mlg"];
+          $record1 = $ret_gps["posi"];
+          $record2 = $ret_gps["misc"];
         }
         else if ($tracker_type == "JMT") {
-          // execution commande position pour l'objet suivi (JeeMate)
+          // ------- Traceur JeeMate ------
+          // execution commande position pour l'objet suivi
           $jd_getposition_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jm_position'));
           $jd_getposition_cmd  = cmd::byId($jd_getposition_cmdname);
           if (!is_object($jd_getposition_cmd)) {
             throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
           }
-          $gps_position = $jd_getposition_cmd->execCmd();
-          // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
-          $gps_array = explode(",", $gps_position);
-          $lat = floatval($gps_array[0]);
-          $lon = floatval($gps_array[1]);
-          if (count($gps_array) == 3)
-            $alt = floatval($gps_array[2]);
-          else
-            $alt = 0;
-          $vitesse = 0;
           // execution commande activite pour l'objet suivi (Jeedom Connect)
           $jd_getactivite_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jm_activite'));
           $jd_getactivite_cmd  = cmd::byId($jd_getactivite_cmdname);
@@ -383,18 +504,6 @@ class gps_tracker extends eqLogic {
             throw new Exception(__('Impossible de trouver la commande gps activité', __FILE__));
           }
           $activite = $jd_getactivite_cmd->execCmd();
-          if ($activite == "still")  // Valeurs possibles: still, walking, in_vehicle
-            $kinetic_moving = 0;
-          elseif ($activite == "walking")
-            $kinetic_moving = 1;
-          // elseif ($activite == "running")
-            // $kinetic_moving = 2;
-          // elseif ($activite == "on_bicycle")
-            // $kinetic_moving = 3;
-          elseif ($activite == "in_vehicle")
-            $kinetic_moving = 4;
-          else
-            $kinetic_moving = 0;
           // execution commande batterie pour l'objet suivi (Jeedom Connect)
           $jd_getbatterie_cmdname = str_replace('#', '', $this->getConfiguration('cmd_jm_batterie'));
           $jd_getbatterie_cmd  = cmd::byId($jd_getbatterie_cmdname);
@@ -402,12 +511,40 @@ class gps_tracker extends eqLogic {
             throw new Exception(__('Impossible de trouver la commande gps batterie', __FILE__));
           }
           $batt_level = $jd_getbatterie_cmd->execCmd();
+
+          // Capture l'historique de la derniere minute
+          $debut = date("Y-m-d H:i:s", strtotime("Now")-60);
+          $fin = date("Y-m-d H:i:s", strtotime("Now")); 
+          $cmdId = $jd_getposition_cmd->getId();
+          $values = history::all($cmdId, $debut, $fin);
+          $gps_position_hist = [];
+          $prev_posi = $previous_gps_position;
+          $current_milleage = $previous_mileage;
+          foreach ($values as $value) {
+            $date = $value->getDatetime();
+            $posi = $value->getValue();
+            $ret_gps = $this->analyse_jmt (strtotime($date), $posi, $prev_posi, $activite, $current_milleage);
+            $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
+            array_push($gps_position_hist, $record);
+            log::add('gps_tracker','debug', $tracker_name."->history: record ".$record);
+            $prev_posi = $posi;
+            $current_milleage = $ret_gps["mlg"];
+          }
+          // Capture la position courante
+          $gps_position = $jd_getposition_cmd->execCmd();
+          // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
+          $ret_gps = $this->analyse_jmt ($ctime, $gps_position, $prev_posi, $activite, $current_milleage);
+          $lat = $ret_gps["lat"];
+          $lon = $ret_gps["lon"];
+          $vitesse = $ret_gps["vit"];
+          $kinetic_moving = $ret_gps["kinect"];
+          $new_mlg = $ret_gps["mlg"];
+          $record1 = $ret_gps["posi"];
+          $record2 = $ret_gps["misc"];
+
         }
         // Traitement des informations retournees
         // log::add('gps_tracker','debug', $tracker_name."->MAJ des données du traceur GPS: ".$data_dir);
-        $cmd_mlg = $this->getCmd(null, "kilometrage");
-        $previous_mileage = $cmd_mlg->execCmd();
-        $previous_ts = $cmd_mlg->getConfiguration('prev_ctime');
         $cmd = $this->getCmd(null, "gps_vitesse");
         $cmd->event($vitesse);
         $cmd = $this->getCmd(null, "battery_tracker");
@@ -417,7 +554,6 @@ class gps_tracker extends eqLogic {
         $cmd->event($kinetic_moving);
 
         // Etat courant du trajet
-        $cmd_gps = $this->getCmd(null, "gps_position");
         $trip_start_ts       = $cmd_gps->getConfiguration('trip_start_ts');
         $trip_start_mileage  = $cmd_gps->getConfiguration('trip_start_mileage');
         $trip_in_progress    = $cmd_gps->getConfiguration('trip_in_progress');
@@ -427,43 +563,24 @@ class gps_tracker extends eqLogic {
           $gps_pts_ok = true;
 
         if ($gps_pts_ok == true) {
-          $gps_position = $lat.",".$lon.",".$alt;
-          $previous_gps_position = $cmd_gps->execCmd();
-          // log::add('gps_tracker','debug',$tracker_name."->Refresh:GPS position =>".$gps_position);
+          // log::add('gps_tracker','debug',$tracker_name."->Refresh:GPS position =>".$record1);
           // log::add('gps_tracker','debug',$tracker_name."->Refresh:previous_gps_position=".$previous_gps_position);
           $eq_id = $this->getId();
-          $cmd_gps->event($gps_position.",".$eq_id);   // ajout de l'ID plugin pour transmission au process AJAX sur serveur
-          // $cmd_gps->event($gps_position);
+          $cmd_gps->event($record1.",".$eq_id);   // ajout de l'ID plugin pour transmission au process AJAX sur serveur
           $cmd_gpslat = $this->getCmd(null, "gps_position_lat");
           $cmd_gpslat->event($lat);
           $cmd_gpslon = $this->getCmd(null, "gps_position_lon");
           $cmd_gpslon->event($lon);
 
           // Calcul distance maison
-          $lat_home = deg2rad(floatval(config::byKey("info::latitude")));
-          $lon_home = deg2rad(floatval(config::byKey("info::longitude")));
-          $lat_veh = deg2rad($lat);
-          $lon_veh = deg2rad($lon);
-          $dist_home = 6371.01 * acos(sin($lat_home)*sin($lat_veh) + cos($lat_home)* cos($lat_veh)*cos($lon_home - $lon_veh)); // calcul de la distance
-          $dist_home = round($dist_home, 3);
+          $dist_home = $this->distance_compute(floatval(config::byKey("info::latitude")), floatval(config::byKey("info::longitude")), $lat, $lon);
           $cmd_dis_home = $this->getCmd(null, "gps_dist_home");
-          $cmd_dis_home->event($dist_home);
-          
-          // Calcul distance point precedent
-          $previous_gps_latlon = explode(",", $previous_gps_position);
-          $lat_prev = deg2rad(floatval($previous_gps_latlon[0]));
-          $lon_prev = deg2rad(floatval($previous_gps_latlon[1]));
-          $dist_prev = 6371.01 * acos(sin($lat_prev)*sin($lat_veh) + cos($lat_prev)* cos($lat_veh)*cos($lon_prev - $lon_veh)); // calcul de la distance
-          if (is_nan($dist_prev)) {
-            // log::add('gps_tracker','error', $tracker_name."->Erreur sur le calcul de distance:".$dist_prev);
-            $dist_prev = 0.0;
-          }
-          $mileage = round($previous_mileage + $dist_prev, 1);
-          $cmd_mlg->event($mileage);
+          $cmd_dis_home->event(round($dist_home, 2));
+          // Nouveau kilometrage
+          $cmd_mlg->event($new_mlg);
         }
 
         // Analyse debut et fin de trajet
-        $ctime = time();
         $trip_event = 0;
         if ($trip_in_progress == 0) {
           // Pas de trajet en cours
@@ -484,7 +601,7 @@ class gps_tracker extends eqLogic {
           if (($kinetic_moving == 0) && ($previous_kinetic_moving == 0)) {
             // fin de trajet
             $trip_end_ts       = $ctime;
-            $trip_end_mileage  = $mileage;
+            $trip_end_mileage  = $new_mlg;
             $trip_in_progress  = 0;
             $trip_event = 1;
             // enregistrement d'un trajet
@@ -498,7 +615,16 @@ class gps_tracker extends eqLogic {
         }
         // Log position courante vers GPS log file (pas si vehicule à l'arrêt "à la maison" et pas si "trajets alternatifs")
         if (($gps_pts_ok == true) && (($kinetic_moving > 0) || ($previous_kinetic_moving > 0))) {
-          $gps_log_dt = $ctime.",".$gps_position.",".$vitesse.",".$mileage.",".$kinetic_moving."\n";
+          // Record des donnees issues de l'historique si elles existent
+          if (count($gps_position_hist) > 0) {
+            foreach ($gps_position_hist as $gps_posi) {
+              $gps_log_dt = $gps_posi."\n";
+              log::add('gps_tracker','debug', $tracker_name."->Refresh->recording hist Gps_dt=".$gps_log_dt);
+              file_put_contents($fn_car_gps, $gps_log_dt, FILE_APPEND | LOCK_EX);
+            }
+          }
+          // Record des donnees courantes
+          $gps_log_dt = $ctime.",".$record1.",".$record2."\n";
           log::add('gps_tracker','debug', $tracker_name."->Refresh->recording Gps_dt=".$gps_log_dt);
           file_put_contents($fn_car_gps, $gps_log_dt, FILE_APPEND | LOCK_EX);
         }

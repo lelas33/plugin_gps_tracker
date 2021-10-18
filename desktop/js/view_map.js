@@ -46,7 +46,7 @@ function initMap(lat_home, lon_home, lat_veh, lon_veh) {
         maxZoom: 20
     }).addTo(gps_macarte);
     // Add marker home
-    var iconOptions = {iconUrl: 'plugins/peugeotcars/3rdparty/leaflet_v1.7.1/home_icon.png', iconSize: [40, 40]};
+    var iconOptions = {iconUrl: 'plugins/gps_tracker/3rdparty/leaflet_v1.7.1/home_icon.png', iconSize: [40, 40]};
     // Creating a custom icon
     var customIcon = L.icon(iconOptions);
     // Creating Marker Options

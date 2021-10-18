@@ -378,21 +378,30 @@ try {
       ajax::error("Invalid ID");
     }
     else if ($eq->getIsEnable()) {
-      $tracker_type = $eq->getConfiguration("type_tracker");
+      $tracker_type  = $eq->getConfiguration("type_tracker");
+      $default_image = $eq->getConfiguration("img_default");
       if ($tracker_type == "TKS") {
         $imei_id     = $eq->getConfiguration("tkstar_imei");
         $data_dir = "tks_".$imei_id;
+        $data_def = "tks_def.png";
       }
       else if ($tracker_type == "JCN") {
         $jd_getposition_cmd  = $eq->getConfiguration("cmd_jc_position");
         $data_dir = "jcn_".str_replace ('#', '', $jd_getposition_cmd);
+        $data_def = "jcn_def.png";
       }
       else if ($tracker_type == "JMT") {
         $jd_getposition_cmd  = $eq->getConfiguration("cmd_jm_position");
         $data_dir = "jmt_".str_replace ('#', '', $jd_getposition_cmd);
+        $data_def = "jmt_def.png";
       }
     }
-    $path = "plugins/gps_tracker/data/".$data_dir."/img.png";
+    if ($default_image == False) {
+      $path = "plugins/gps_tracker/data/".$data_dir."/img.png";    
+    }
+    else {
+      $path = "plugins/gps_tracker/data/img_def/".$data_def;    
+    }
     log::add('gps_tracker', 'info', 'Ajax:getImagePath =>'.$path);
     ajax::success($path);
     }

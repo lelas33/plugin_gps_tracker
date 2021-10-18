@@ -10,6 +10,7 @@
 
     $('.cmd[data-cmd_id=#id#] .picture').on('click', function () {
       var param_str = '#listValue#';
+      console.log("listValue:"+param_str);
       var imei_sta1 = param_str.indexOf('&');
       var imei_sta2 = param_str.indexOf('~');
       if ((imei_sta1 != -1) && (imei_sta2 != -1)) {

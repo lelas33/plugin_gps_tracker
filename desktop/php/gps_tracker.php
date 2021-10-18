@@ -120,11 +120,17 @@ $eqLogics = eqLogic::byType($plugin->getId());
                     <label class="col-lg-2 control-label"></label>
                     <label class="col-lg-3"><br>{{Image de l'objet suivi}}</label>
                 </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label"></label>
+                    <div class="col-lg-2">
+                       <input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="img_default" checked/> {{ Image par défaut}}
+                    </div>
+                </div>
                 <div class="form-group load_image">
                     <label class="col-lg-2 control-label"></label>
                     <div class="col-lg-3">
                       <span class="input-group-btn">
-                        <input type="file" accept="image/png" id="load_image_input" style="display:none;" >
+                        <br><input type="file" accept="image/png" id="load_image_input" style="display:none;" >
                         <a class="btn btn-primary" id="load_image_conf"><i class="fa fa-cloud-upload-alt"></i> {{Fichier Image}}</a>
                       </span>
                     </div>
