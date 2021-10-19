@@ -8,5 +8,5 @@
 ## 19/10/2021: Tag gps_trk_v0.2
 
 - Ajout du traceur téléphone avec appli Jeemate
-- Gestion de l'historique des positions GPS sur les applis JeedomConnect et Jeemate
+- Gestion de l'historique des positions GPS sur les applis JeedomConnect et Jeemate pour une meilleure précision des trajets
 - Ajout d'une image par défaut pour chaque équipement
