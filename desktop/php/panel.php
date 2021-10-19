@@ -14,9 +14,8 @@ $date = array(
 sendVarToJS('eqType', 'gps_tracker');
 sendVarToJs('object_id', init('object_id'));
 $eqLogics = eqLogic::byType('gps_tracker');
-if ((isset($_GET["eq_id"])) && (isset($_GET["eq_path"]))) {
+if (isset($_GET["eq_id"])) {
   $eq_id   = $_GET["eq_id"];
-  $eq_path = $_GET["eq_path"];
   foreach ($eqLogics as $eql) {
     if ($eq_id == $eql->getId())
       $eqLogic = $eql;
@@ -25,18 +24,36 @@ if ((isset($_GET["eq_id"])) && (isset($_GET["eq_path"]))) {
 else {
   $eqLogic = $eqLogics[0];
   $eq_id = $eqLogic->getId();
-  $eq_path = "";
+}
+// Path to image
+$eq_path = "";
 
-  $tracker_type = $eqLogic->getConfiguration("type_tracker");
-  if ($tracker_type == "TKS") {
-    $imei_id     = $eqLogic->getConfiguration("tkstar_imei");
-    $eq_path = "tks_".$imei_id;
-  }
-  else if ($tracker_type == "JCN") {
-    $jd_getposition_cmd  = $eqLogic->getConfiguration("cmd_jc_position");
-    $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
-    $eq_path = "jcn_".$jd_getposition_cmdf;
-  }
+$tracker_type  = $eqLogic->getConfiguration("type_tracker");
+$default_image = $eqLogic->getConfiguration("img_default");
+
+if ($tracker_type == "TKS") {
+  $imei_id     = $eqLogic->getConfiguration("tkstar_imei");
+  $eq_path = "tks_".$imei_id;
+  $eq_def = "tks_def.png";
+}
+else if ($tracker_type == "JCN") {
+  $jd_getposition_cmd  = $eqLogic->getConfiguration("cmd_jc_position");
+  $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
+  $eq_path = "jcn_".$jd_getposition_cmdf;
+  $eq_def = "jcn_def.png";
+}
+else if ($tracker_type == "JMT") {
+  $jm_getposition_cmd  = $eqLogic->getConfiguration("cmd_jm_position");
+  $jm_getposition_cmdf = str_replace ('#', '', $jm_getposition_cmd);
+  $eq_path = "jmt_".$jm_getposition_cmdf;
+  $eq_def = "jmt_def.png";
+}
+
+if ($default_image == False) {
+  $img_path = "plugins/gps_tracker/data/".$eq_path."/img.png";    
+}
+else {
+  $img_path = "plugins/gps_tracker/data/img_def/".$eq_def;    
 }
 
 log::add('gps_tracker', 'debug', 'Pannel: eq_id:'.$eq_id.' / eq_path:'.$eq_path);
@@ -68,7 +85,7 @@ if (is_object($cmd_mlg)) {
                 </select>
               </div>
               <div class="pull-right" style="min-height: 30px;">
-                <img id="voiture_img" src=<?php echo "plugins/gps_tracker/data/$eq_path/img.png"; ?> style="max-height:250px;max-width:350px;height:auto;width:auto;" />
+                <img id="voiture_img" src=<?php echo $img_path; ?> style="max-height:250px;max-width:350px;height:auto;width:auto;" />
               </div>
             </fieldset>
         </div>

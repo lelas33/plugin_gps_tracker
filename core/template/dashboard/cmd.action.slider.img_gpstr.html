@@ -10,7 +10,6 @@
 
     $('.cmd[data-cmd_id=#id#] .picture').on('click', function () {
       var param_str = '#listValue#';
-      console.log("listValue:"+param_str);
       var imei_sta1 = param_str.indexOf('&');
       var imei_sta2 = param_str.indexOf('~');
       if ((imei_sta1 != -1) && (imei_sta2 != -1)) {
@@ -19,16 +18,15 @@
         eq_id = param[0];
         eq_path = param[1];
       }
-      if ((eq_id != "") && (eq_path != "")) {
+      if (eq_id != "") {
         var urlcourante = document.location.href;
         urlcourante = urlcourante.replace(/\/$/, "");
         index_end_root = urlcourante.lastIndexOf( "/" );
         url_root = urlcourante.substring(0, index_end_root);
-        window.location = url_root+"/index.php?v=d&m=gps_tracker&p=panel&eq_id="+eq_id+"&eq_path="+eq_path;
+        window.location = url_root+"/index.php?v=d&m=gps_tracker&p=panel&eq_id="+eq_id;
       }
     });
     jeedom.cmd.update['#id#'] = function(_options){
-      var img_fn = "/img.png";
       var param_str = '#listValue#';
       console.log("listValue:"+param_str);
       var imei_sta1 = param_str.indexOf('&');
@@ -43,7 +41,12 @@
       console.log("eq_id:"+eq_id);
       console.log("eq_path:"+eq_path);
       if (eq_path != "") {
-        var img_path = '<img src="plugins/gps_tracker/data/' + eq_path + img_fn + '" style="max-height:150px;max-width:250px;height:auto;width:auto;"/>';
+        var path = "";
+        if      (eq_path == "tks_def") path = "img_def/tks_def.png";
+        else if (eq_path == "jcn_def") path = "img_def/jcn_def.png";
+        else if (eq_path == "jmt_def") path = "img_def/jmt_def.png";
+        else path = eq_path + "/img.png";
+        var img_path = '<img src="plugins/gps_tracker/data/' + path + '" style="max-height:150px;max-width:250px;height:auto;width:auto;"/>';
         $('.cmd[data-cmd_id=#id#] .picture').empty().append(img_path);
       }
     }

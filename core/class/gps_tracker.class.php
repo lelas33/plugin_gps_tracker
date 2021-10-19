@@ -78,6 +78,7 @@ class gps_tracker extends eqLogic {
     {
       // filtrage premier passage
       $tracker_type = $this->getConfiguration("type_tracker");
+      $default_image = $this->getConfiguration("img_default");
       log::add('gps_tracker','debug',"postSave:Type traceur:".$tracker_type);
 
       // Pour les traceur TKSTAR, verification du Login API
@@ -152,6 +153,11 @@ class gps_tracker extends eqLogic {
             $cmd->save();
           }
           else if ($id == "photo") {
+            if ($default_image == True) {
+              if      ($tracker_type == "TKS") $data_dir = "tks_def";
+              else if ($tracker_type == "JCN") $data_dir = "jcn_def";
+              else if ($tracker_type == "JMT") $data_dir = "jmt_def";
+            }
             $param = $this->getId().','.$data_dir;
             $cmd->setConfiguration('listValue', 'PARAM|'.'&'.$param.'~');
             $cmd->save();
@@ -183,6 +189,11 @@ class gps_tracker extends eqLogic {
           }
           else if ($id == "photo") {
             // $cmd->setConfiguration('listValue', 'PATH|'.'&'.$data_dir.'~');
+            if ($default_image == True) {
+              if      ($tracker_type == "TKS") $data_dir = "tks_def";
+              else if ($tracker_type == "JCN") $data_dir = "jcn_def";
+              else if ($tracker_type == "JMT") $data_dir = "jmt_def";
+            }
             $param = $this->getId().','.$data_dir;
             $cmd->setConfiguration('listValue', 'PARAM|'.'&'.$param.'~');
             $cmd->save();

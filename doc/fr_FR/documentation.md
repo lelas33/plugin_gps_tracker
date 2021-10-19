@@ -5,9 +5,10 @@
 Ce plugin permet de capturer les trajets enregistrés par un traceur GPS, et de les organiser dans une base de données locale.<br>
 Cela permet de suivre une voiture, un bateau, un vélo ou un piéton.<br>
 
-Il permet de gérer 2 traceurs GPS dans sa première version:
+Il permet de gérer 3 traceurs GPS dans sa première version:
 * Un traceur GPS TKSTAR : [TK905](https://www.cdiscount.com/search/10/tk905.html#_his_)
 * Un téléphone avec l'application JeedomConnect installée
+* Un téléphone avec l'application Jeemate installée
 
 Les informations disponibles dans le widgets sont:
 * Situation de l'objet suivi sur une carte (Position GPS), distance au domicile, et information si l'objet se déplace.
@@ -36,11 +37,20 @@ Par source Github:
 
 ## Configuration
 Une fois l'installation effectuée:<br>
-Sur l'onglet "**Equipement**", sélectionner le type de traceur GPS utilisé (TK905 ou JeedomConnect), et choisissez l'objet parent.<br>
+Sur l'onglet "**Equipement**", sélectionner le type de traceur GPS utilisé (TK905, JeedomConnect ou Jeemate), et choisissez l'objet parent.<br>
 Vous pouvez ensuite télécharger une image de l'objet suivi, qui sera reprise dans le widget et le pannel.<br>
+Il est possible de sélectionner une image par défaut en cochant la case correspondante.
 
 <p align="left">
   <img src="../images/config_equipement.png" width="800" title="Configuration équipement">
+</p>
+
+<p align="left">
+  <img src="../images/config_equipement2.png" width="800" title="Configuration équipement">
+</p>
+
+<p align="left">
+  <img src="../images/config_equipement3.png" width="800" title="Configuration équipement">
 </p>
 
 Il faut saisir ensuite quelques informations complémentaires selon le type de traceur.<br>
@@ -49,7 +59,12 @@ Pour le traceur TKSTAR:
 * Les paramètres de login au compte associé. (Login / mot de passe)
 
 Pour le traceur Jeedom connect, il faut saisir le paramètre suivant qui est un champ "info" de votre équipement Téléphone dans le plugin JeedomConnect.
-* Position GPS courante
+* Position: [Position]
+
+Pour le traceur Jeemate connect, il faut saisir les 3 paramètres suivants qui sont des champs "info" de votre équipement Téléphone dans le plugin JeedomMate.
+* Position: [(GeoLoc) Position]
+* Activité: [(GeoLoc) Type activité]
+* Batterie: [State Battery]
 
 Il faut également activer l'option "Ajouter données à la position" dans l'équipement JeedomConnect.<br>
 Cela permettra d'ajouter l'altitude, l'activité et le niveau de batterie aux informations de position.<br>
