@@ -2,8 +2,12 @@
 *.bak
 *.zip
 3rdparty/sample_lau.php
-/data/*/*.log
-/data/*/*.png
+/data/jcn*/*.log
+/data/jcn*/*.png
+/data/jmt*/*.log
+/data/jmt*/*.png
+/data/tks*/*.log
+/data/tks*/*.png
 
 
 
