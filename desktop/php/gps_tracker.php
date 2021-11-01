@@ -75,6 +75,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
                           <option value="TKS">{{Traceur TKSTAR TK905}}</option>
                           <option value="JCN">{{Application JeedomConnect}}</option>
                           <option value="JMT">{{Application JeeMate}}</option>
+                          <option value="TRC">{{GPS Traccar}}</option>
+                          <option value="GEN">{{GPS générique}}</option>
                       </select>
                     </div>
                 </div>
@@ -182,7 +184,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
                 <div id="param_jmt" style="display: none;">
                   <div class="form-group">
                       <label class="col-lg-2 control-label"></label>
-                      <label class="col-lg-4"><br>{{Information complémentaire pour le traceur Appli.JeeMate}}</label>
+                      <label class="col-lg-4"><br>{{Informations complémentaires pour le traceur Appli.JeeMate}}</label>
                   </div>
                   <div class="form-group">
                       <label class="col-lg-2 control-label">{{Position}}</label>
@@ -215,6 +217,126 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <a class="btn btn-default listCmdInfoNumeric roundedRight"><i class="fas fa-list-alt"></i></a>
                           </span>
                         </div>
+                      </div>
+                  </div>
+                </div>
+                <div id="param_trc">
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label"></label>
+                      <label class="col-lg-4"><br>{{Informations complémentaires pour un traceur dans une base Traccar}}</label>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{URL du serveur Traccar}}</label>
+                      <div class="col-lg-3">
+                          <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="trc_url" placeholder="{{http://xx.xx.xx.xx:8082}}"/>
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Login compte Traccar}}</label>
+                      <div class="col-lg-3">
+                          <input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="trc_account" />
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Password compte Traccar}}</label>
+                      <div class="col-lg-3">
+                          <input type="password" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="trc_password" />
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Nom du traceur Traccar}}</label>
+                      <div class="col-lg-3">
+                         <input type="text" id="trc_name_input" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="trc_name" placeholder="{{Nom du traceur dans la base Traccar}}" />
+                      </div>
+                      <div class="col-lg-3 load_traccar_devices">
+                        <a class="btn btn-success" id="load_traccar_devices_conf">{{liste "devices"}}</a>
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{ID unique du traceur Traccar}}</label>
+                      <div class="col-lg-3">
+                         <input type="text" id="trc_idunic_input" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="trc_idunic" placeholder="{{Identifiant unique du traceur dans la base Traccar}}" />
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{ID du traceur Traccar}}</label>
+                      <div class="col-lg-3">
+                         <input type="text" id="trc_id_input" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="trc_id" placeholder="{{Identifiant du traceur dans la base Traccar}}" />
+                      </div>
+                  </div>
+                </div>
+                <div id="param_gen" style="display: none;">
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label"></label>
+                      <label class="col-lg-4"><br>{{Informations complémentaires pour le traceur générique}}</label>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-sm-2 control-label">{{Position}}
+                        <sup><i class="fas fa-question-circle tooltips" title="{{Informations issues du GPS, sous la forme: param1, param2, param3, param4}}"></i></sup>
+                      </label>
+                      <div class="col-lg-4">
+                        <div class="input-group">
+                          <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_gen_position" placeholder="{{param1, param2, param3, param4}}"/>
+                          <span class="input-group-btn">
+                            <a class="btn btn-default listCmdInfoOther roundedRight"><i class="fas fa-list-alt"></i></a>
+                          </span>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Valeur de param1}}
+                        <sup><i class="fas fa-question-circle tooltips" title="{{Signification du paramètre: param1}}"></i></sup>
+                      </label>
+                      <div class="col-lg-4">
+                        <select id="tracker_select" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="gen_param1">
+                            <option value="LAT" selected="selected">{{Latitude}}</option>
+                            <option value="LON">{{Longitude}}</option>
+                            <option value="ALT">{{Altitude}}</option>
+                            <option value="SPD">{{Vitesse}}</option>
+                            <option value="NONE">{{Inutilisé}}</option>
+                        </select>
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Valeur de param2}}
+                        <sup><i class="fas fa-question-circle tooltips" title="{{Signification du paramètre: param2}}"></i></sup>
+                      </label>
+                      <div class="col-lg-4">
+                        <select id="tracker_select" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="gen_param2">
+                            <option value="LAT">{{Latitude}}</option>
+                            <option value="LON" selected="selected">{{Longitude}}</option>
+                            <option value="ALT">{{Altitude}}</option>
+                            <option value="SPD">{{Vitesse}}</option>
+                            <option value="NONE">{{Inutilisé}}</option>
+                        </select>
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Valeur de param3}}
+                        <sup><i class="fas fa-question-circle tooltips" title="{{Signification du paramètre: param3}}"></i></sup>
+                      </label>
+                      <div class="col-lg-4">
+                        <select id="tracker_select" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="gen_param3">
+                            <option value="LAT">{{Latitude}}</option>
+                            <option value="LON">{{Longitude}}</option>
+                            <option value="ALT">{{Altitude}}</option>
+                            <option value="SPD">{{Vitesse}}</option>
+                            <option value="NONE" selected="selected">{{Inutilisé}}</option>
+                        </select>
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label class="col-lg-2 control-label">{{Valeur de param4}}
+                        <sup><i class="fas fa-question-circle tooltips" title="{{Signification du paramètre: param4}}"></i></sup>
+                      </label>
+                      <div class="col-lg-4">
+                        <select id="tracker_select" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="gen_param4">
+                            <option value="LAT">{{Latitude}}</option>
+                            <option value="LON">{{Longitude}}</option>
+                            <option value="ALT">{{Altitude}}</option>
+                            <option value="SPD">{{Vitesse}}</option>
+                            <option value="NONE" selected="selected">{{Inutilisé}}</option>
+                        </select>
                       </div>
                   </div>
                 </div>

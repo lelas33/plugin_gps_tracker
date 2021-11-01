@@ -19,6 +19,7 @@
 /* * ***************************Includes********************************* */
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 require_once dirname(__FILE__) . '/../../3rdparty/api_tkstar.php';
+require_once dirname(__FILE__) . '/../../3rdparty/api_traccar.php';
 
 
 define("GPS_FILES_DIR_CL", "/../../data/");
@@ -81,7 +82,7 @@ class gps_tracker extends eqLogic {
       $default_image = $this->getConfiguration("img_default");
       log::add('gps_tracker','debug',"postSave:Type traceur:".$tracker_type);
 
-      // Pour les traceur TKSTAR, verification du Login API
+      // Pour les traceurs TKSTAR, verification du Login API
       if ($tracker_type == "TKS") {
         $imei_id     = $this->getConfiguration("tkstar_imei");
         $tk_account  = $this->getConfiguration("tkstar_account");
@@ -100,7 +101,7 @@ class gps_tracker extends eqLogic {
         $data_dir = "tks_".$imei_id;
         log::add('gps_tracker','debug',"postSave: TKS-> IMEI=".$imei_id." / login success=".$login_token["status"]." (données:data/".$data_dir.")" );
       }
-      // Pour les traceur JeedomConnect, verification de la commande "get GPS position"
+      // Pour les traceurs JeedomConnect, verification de la commande "get GPS position"
       else if ($tracker_type == "JCN") {
         $jd_getposition_cmd  = $this->getConfiguration("cmd_jc_position");
         if ($jd_getposition_cmd == "") {
@@ -111,7 +112,7 @@ class gps_tracker extends eqLogic {
         $data_dir = "jcn_".$jd_getposition_cmdf;
         log::add('gps_tracker','debug',"postSave: JCN-> TEL_ID=".$jd_getposition_cmdf." (données:data/".$data_dir.")" );
       }
-      // Pour les traceur JeeMate, verification de la commande "get GPS position"
+      // Pour les traceurs JeeMate, verification de la commande "get GPS position"
       else if ($tracker_type == "JMT") {
         $jd_getposition_cmd  = $this->getConfiguration("cmd_jm_position");
         if ($jd_getposition_cmd == "") {
@@ -121,6 +122,37 @@ class gps_tracker extends eqLogic {
         $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
         $data_dir = "jmt_".$jd_getposition_cmdf;
         log::add('gps_tracker','debug',"postSave: JMT-> TEL_ID=".$jd_getposition_cmdf." (données:data/".$data_dir.")" );
+      }
+      // Pour les traceurs Traccar, verification du login a la base traccar
+      else if ($tracker_type == "TRC") {
+        $trc_url      = $this->getConfiguration("trc_url");
+        $trc_account  = $this->getConfiguration("trc_account");
+        $trc_password = $this->getConfiguration("trc_password");
+        $trc_idunic   = $this->getConfiguration("trc_idunic");
+        if (($trc_url == "") || ($trc_account == "") || ($trc_password == "") || ($trc_idunic == "")) {
+          log::add('gps_tracker','error',"postSave: TRC->Paramètres de Login Traccar non définis");
+          return;
+        }
+        $session_traccar = new api_traccar();
+        $session_traccar->login($trc_url, $trc_account, $trc_password);
+        $res = $session_traccar->traccar_get_devices();  // liste devices existants
+        if ($res["nb_dev"] == 0) {
+          log::add('gps_tracker','error',"postSave: TRC->Erreur Login Traccar");
+          return;  // Erreur de Login Traccar
+        }
+        $data_dir = "trc_".$trc_idunic;
+        log::add('gps_tracker','debug',"postSave: TRC-> ID Unique=".$trc_idunic." (données:data/".$data_dir.")" );
+      }
+      // Pour les traceur Generiques, verification de la commande "get GPS position"
+      else if ($tracker_type == "GEN") {
+        $jd_getposition_cmd  = $this->getConfiguration("cmd_gen_position");
+        if ($jd_getposition_cmd == "") {
+          log::add('gps_tracker','error',"postSave: GEN->Commande d'accès à la position GPS non definie");
+          return;
+        }
+        $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
+        $data_dir = "gen_".$jd_getposition_cmdf;
+        log::add('gps_tracker','debug',"postSave: GEN-> TEL_ID=".$jd_getposition_cmdf." (données:data/".$data_dir.")" );
       }
 
       // creation de la liste des commandes / infos
@@ -153,12 +185,15 @@ class gps_tracker extends eqLogic {
             $cmd->save();
           }
           else if ($id == "photo") {
+            $img_dir = $data_dir;
             if ($default_image == True) {
-              if      ($tracker_type == "TKS") $data_dir = "tks_def";
-              else if ($tracker_type == "JCN") $data_dir = "jcn_def";
-              else if ($tracker_type == "JMT") $data_dir = "jmt_def";
+              if      ($tracker_type == "TKS") $img_dir = "tks_def";
+              else if ($tracker_type == "JCN") $img_dir = "jcn_def";
+              else if ($tracker_type == "JMT") $img_dir = "jmt_def";
+              else if ($tracker_type == "TRC") $img_dir = "trc_def";
+              else if ($tracker_type == "GEN") $img_dir = "gen_def";
             }
-            $param = $this->getId().','.$data_dir;
+            $param = $this->getId().','.$img_dir;
             $cmd->setConfiguration('listValue', 'PARAM|'.'&'.$param.'~');
             $cmd->save();
           }
@@ -188,19 +223,21 @@ class gps_tracker extends eqLogic {
             $cmd->save();
           }
           else if ($id == "photo") {
-            // $cmd->setConfiguration('listValue', 'PATH|'.'&'.$data_dir.'~');
+            $img_dir = $data_dir;
             if ($default_image == True) {
-              if      ($tracker_type == "TKS") $data_dir = "tks_def";
-              else if ($tracker_type == "JCN") $data_dir = "jcn_def";
-              else if ($tracker_type == "JMT") $data_dir = "jmt_def";
+              if      ($tracker_type == "TKS") $img_dir = "tks_def";
+              else if ($tracker_type == "JCN") $img_dir = "jcn_def";
+              else if ($tracker_type == "JMT") $img_dir = "jmt_def";
+              else if ($tracker_type == "TRC") $img_dir = "trc_def";
+              else if ($tracker_type == "GEN") $img_dir = "gen_def";
             }
-            $param = $this->getId().','.$data_dir;
+            $param = $this->getId().','.$img_dir;
             $cmd->setConfiguration('listValue', 'PARAM|'.'&'.$param.'~');
             $cmd->save();
             log::add('gps_tracker','debug',"postSave: param=".$param);
           }
           else {
-            $cmd->save($data_dir);
+            $cmd->save();
           }
         }
       }
@@ -246,7 +283,7 @@ class gps_tracker extends eqLogic {
       }
     }
 
-    // Calcul de la distance entre 2 position GPS
+    // Calcul de la distance entre 2 position GPS. Retour en km
     public function distance_compute ($lat0, $lon0, $lat1, $lon1) {
       $lat0r = deg2rad($lat0);
       $lon0r = deg2rad($lon0);
@@ -308,7 +345,7 @@ class gps_tracker extends eqLogic {
     }
     
     // Analyse des donnees du GPS JeeMate
-    public function analyse_jmt ($date, $gps_posi, $prev_posi, $activite, $prev_mlg) {
+    public function analyse_jmt ($date, $gps_posi, $prev_posi, $activite, $prev_mlg, $batt_level) {
       $gps_array = explode(",", $gps_posi);
       if (count($gps_array) < 2) {
         throw new Exception(__('Il manque des informations dans la commande GPS position', __FILE__));
@@ -354,7 +391,63 @@ class gps_tracker extends eqLogic {
       return($ret_gps);
     }
 
-    // Lecture des statuts du vehicule connecté
+    // Analyse des donnees du GPS Generique
+    public function analyse_gen ($date, $gps_posi, $prev_posi, $param, $prev_mlg, &$mvt_cpt) {
+      $gps_array = explode(",", $gps_posi);
+      $nb_param = count($gps_array);
+      $lat = "";
+      $lon = "";
+      $alt = 0;
+      $vitesse = 0;
+      for ($i=0; $i<4; $i++) {
+        if ($nb_param > $i) {
+          if ($param[$i] == "LAT")
+            $lat = floatval($gps_array[$i]);
+          else if ($param[$i] == "LON")
+            $lon = floatval($gps_array[$i]);
+          else if ($param[$i] == "ALT")
+            $alt = floatval($gps_array[$i]);
+          else if ($param[$i] == "SPD")
+            $vitesse = floatval($gps_array[$i]);
+        }
+      }
+      if (($lat == "") && ($lon == "")) {
+        throw new Exception(__('Il manque des informations dans la commande GPS position', __FILE__));
+      }
+      // Point GPS precedent
+      $gps_array = explode(",", $prev_posi);
+      $prev_lat = floatval($gps_array[0]);
+      $prev_lon = floatval($gps_array[1]);
+      // Distance depuis le point précédent
+      $dist = $this->distance_compute ($lat, $lon, $prev_lat, $prev_lon);
+      // Gestion du deplacement
+      if (($dist >= 0.050) && ($mvt_cpt < 5)) {      // 50m
+        $mvt_cpt = $mvt_cpt + 1;
+      }
+      else if (($dist < 0.020) && ($mvt_cpt > 0)) {  // 20m
+        $mvt_cpt = $mvt_cpt - 1;
+      }
+      $kinetic_moving = 0;
+      if ($mvt_cpt >= 3)
+        $kinetic_moving = 1;
+
+      // Calcul du kilometrage courant
+      $mlg = round($prev_mlg + $dist, 1);
+      // Mise au format du fichier a generer
+      $ret_gps["ts"] = $date;
+      $ret_gps["posi"] = $lat.",".$lon.",".$alt;
+      $ret_gps["misc"] = $vitesse.",".$mlg.",".$kinetic_moving;
+      $ret_gps["batt"] = 0;
+      $ret_gps["lat"]  = $lat;
+      $ret_gps["lon"]  = $lon;
+      $ret_gps["vit"]  = $vitesse;
+      $ret_gps["mlg"]  = $mlg;
+      $ret_gps["kinect"] = $kinetic_moving;
+      return($ret_gps);
+    }
+
+    // Traitement periodique: lecture de l'état des traceurs GPS
+    // =========================================================
     public function periodic_state($rfh) {
       $tracker_type = $this->getConfiguration("type_tracker");
       $minute = intval(date("i"));
@@ -371,7 +464,7 @@ class gps_tracker extends eqLogic {
         }
         $data_dir = "tks_".$imei_id;
       }
-      // Pour les traceur JeedomConnect, verification de la commande "get GPS position"
+      // Pour les traceurs JeedomConnect, verification de la commande "get GPS position"
       else if ($tracker_type == "JCN") {
         $jd_getposition_cmd  = $this->getConfiguration("cmd_jc_position");
         if ($jd_getposition_cmd == "") {
@@ -380,7 +473,7 @@ class gps_tracker extends eqLogic {
         $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
         $data_dir = "jcn_".$jd_getposition_cmdf;
       }
-      // Pour les traceur JeeMate, verification de la commande "get GPS position"
+      // Pour les traceurs JeeMate, verification de la commande "get GPS position"
       else if ($tracker_type == "JMT") {
         $jd_getposition_cmd  = $this->getConfiguration("cmd_jm_position");
         if ($jd_getposition_cmd == "") {
@@ -389,8 +482,28 @@ class gps_tracker extends eqLogic {
         $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
         $data_dir = "jmt_".$jd_getposition_cmdf;
       }
+      // Pour les traceurs tracccar, verification verification du Login au serveur
+      else if ($tracker_type == "TRC") {
+        $trc_url      = $this->getConfiguration("trc_url");
+        $trc_account  = $this->getConfiguration("trc_account");
+        $trc_password = $this->getConfiguration("trc_password");
+        $trc_id       = $this->getConfiguration("trc_id");
+        if (($trc_url == "") || ($trc_account == "") || ($trc_password == "") || ($trc_id == "")) {
+          return;
+        }
+        $data_dir = "";  // Pas d'enregistrement pour un traceur "traccar" ; on utilise la base traccar
+      }
+      // Pour les traceurs Generiques, verification de la commande "get GPS position"
+      else if ($tracker_type == "GEN") {
+        $jd_getposition_cmd  = $this->getConfiguration("cmd_gen_position");
+        if ($jd_getposition_cmd == "") {
+          return;
+        }
+        $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
+        $data_dir = "gen_".$jd_getposition_cmdf;
+      }
 
-      // Appel API pour le statut courant du vehicule
+      // Fichiers de logs
       $fn_car_gps   = dirname(__FILE__).GPS_FILES_DIR_CL.$data_dir.'/gps.log';
       $fn_car_trips = dirname(__FILE__).GPS_FILES_DIR_CL.$data_dir.'/trips.log';
 
@@ -411,6 +524,8 @@ class gps_tracker extends eqLogic {
         $ctime = time();
         $cmd_gps = $this->getCmd(null, "gps_position");
         $previous_gps_position = $cmd_gps->execCmd();
+        $cmd_kinetic = $this->getCmd(null, "kinetic_moving");
+        $previous_kinetic_moving = $cmd_kinetic->execCmd();
 
         // Recuperation des donnees du traceur GPS, selon son type
         if ($tracker_type == "TKS") {
@@ -534,7 +649,7 @@ class gps_tracker extends eqLogic {
           foreach ($values as $value) {
             $date = $value->getDatetime();
             $posi = $value->getValue();
-            $ret_gps = $this->analyse_jmt (strtotime($date), $posi, $prev_posi, $activite, $current_milleage);
+            $ret_gps = $this->analyse_jmt (strtotime($date), $posi, $prev_posi, $activite, $current_milleage, $batt_level);
             $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
             array_push($gps_position_hist, $record);
             log::add('gps_tracker','debug', $tracker_name."->history: record ".$record);
@@ -544,7 +659,7 @@ class gps_tracker extends eqLogic {
           // Capture la position courante
           $gps_position = $jd_getposition_cmd->execCmd();
           // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
-          $ret_gps = $this->analyse_jmt ($ctime, $gps_position, $prev_posi, $activite, $current_milleage);
+          $ret_gps = $this->analyse_jmt ($ctime, $gps_position, $prev_posi, $activite, $current_milleage, $batt_level);
           $lat = $ret_gps["lat"];
           $lon = $ret_gps["lon"];
           $vitesse = $ret_gps["vit"];
@@ -552,17 +667,100 @@ class gps_tracker extends eqLogic {
           $new_mlg = $ret_gps["mlg"];
           $record1 = $ret_gps["posi"];
           $record2 = $ret_gps["misc"];
-
         }
+        if ($tracker_type == "TRC") {
+          // ------- Traceur Traccar ------
+          $trc_url      = $this->getConfiguration("trc_url");
+          $trc_account  = $this->getConfiguration("trc_account");
+          $trc_password = $this->getConfiguration("trc_password");
+          $trc_id       = $this->getConfiguration("trc_id");
+          if (($trc_url == "") || ($trc_account == "") || ($trc_password == "") || ($trc_id == "")) {
+            log::add('gps_tracker','error',"postSave: TRC->Paramètres de Login Traccar non définis");
+            return;
+          }
+          $session_traccar = new api_traccar();
+          $session_traccar->login($trc_url, $trc_account, $trc_password);
+          // Capture des donnes courantes issues du GPS
+          $res = $session_traccar->traccar_get_positions($trc_id);
+          if ($res["status"] == "KO") {
+            log::add('gps_tracker','error', $tracker_name."->Erreur position traceur traccar");
+            $lat = 0;
+            $lon = 0;
+            $vitesse = 0;
+            $batt_level = 0;
+            $kinetic_moving = false;
+          }
+          else {
+            // extraction des donnees utiles
+            $lat = floatval($res["lat"]);
+            $lon = floatval($res["lon"]);
+            $vitesse = round(floatval($res["spd"]), 1);
+            $batt_level = floatval($res["batt"]);
+            $kinetic_moving = floatval($res["motion"]);
+          }
+          $gps_position_hist = [];
+          $alt = 0 ;
+          $previous_gps_latlon = explode(",", $previous_gps_position);
+          $dist_prev = $this->distance_compute(floatval($previous_gps_latlon[0]), floatval($previous_gps_latlon[1]), $lat, $lon);
+          $new_mlg = round($previous_mileage + $dist_prev, 1);
+          $record1 = $lat.",".$lon.",".$alt;
+          $record2 = $vitesse.",".$new_mlg.",".$kinetic_moving;
+        }
+        else if ($tracker_type == "GEN") {
+          // ------- Traceur Generique ------
+          // execution commande position pour l'objet suivi
+          $jd_getposition_cmdname = str_replace('#', '', $this->getConfiguration('cmd_gen_position'));
+          $jd_getposition_cmd  = cmd::byId($jd_getposition_cmdname);
+          if (!is_object($jd_getposition_cmd)) {
+            throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
+          }
+          $mvt_cpt = $cmd_kinetic->getConfiguration('mvt_cpt');
+          if (!isset($mvt_cpt) || ($mvt_cpt == ""))
+            $mvt_cpt = 0;
+          $batt_level = 0;
+          $param = array($this->getConfiguration("gen_param1"), $this->getConfiguration("gen_param2"),
+                         $this->getConfiguration("gen_param3"), $this->getConfiguration("gen_param4"));
+          // Capture l'historique de la derniere minute
+          $debut = date("Y-m-d H:i:s", strtotime("Now")-60);
+          $fin = date("Y-m-d H:i:s", strtotime("Now")); 
+          $cmdId = $jd_getposition_cmd->getId();
+          $values = history::all($cmdId, $debut, $fin);
+          $gps_position_hist = [];
+          $prev_posi = $previous_gps_position;
+          $current_milleage = $previous_mileage;
+          foreach ($values as $value) {
+            $date = $value->getDatetime();
+            $posi = $value->getValue();
+            $ret_gps = $this->analyse_gen (strtotime($date), $posi, $prev_posi, $param, $current_milleage, $mvt_cpt);
+            $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
+            array_push($gps_position_hist, $record);
+            log::add('gps_tracker','debug', $tracker_name."->history: record ".$record);
+            $prev_posi = $posi;
+            $current_milleage = $ret_gps["mlg"];
+          }
+          // Capture la position courante
+          $gps_position = $jd_getposition_cmd->execCmd();
+          // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
+          $ret_gps = $this->analyse_gen ($ctime, $gps_position, $prev_posi, $param, $current_milleage, $mvt_cpt);
+          $lat = $ret_gps["lat"];
+          $lon = $ret_gps["lon"];
+          $vitesse = $ret_gps["vit"];
+          $kinetic_moving = $ret_gps["kinect"];
+          $new_mlg = $ret_gps["mlg"];
+          $record1 = $ret_gps["posi"];
+          $record2 = $ret_gps["misc"];
+          $cmd_kinetic->setConfiguration('mvt_cpt', $mvt_cpt);
+          $cmd_kinetic->save();
+          // log::add('gps_tracker','debug', $tracker_name."->: mvt_cpt=".$mvt_cpt);
+        }
+
         // Traitement des informations retournees
         // log::add('gps_tracker','debug', $tracker_name."->MAJ des données du traceur GPS: ".$data_dir);
         $cmd = $this->getCmd(null, "gps_vitesse");
         $cmd->event($vitesse);
         $cmd = $this->getCmd(null, "battery_tracker");
         $cmd->event($batt_level);
-        $cmd = $this->getCmd(null, "kinetic_moving");
-        $previous_kinetic_moving = $cmd->execCmd();
-        $cmd->event($kinetic_moving);
+        $cmd_kinetic->event($kinetic_moving);
 
         // Etat courant du trajet
         $trip_start_ts       = $cmd_gps->getConfiguration('trip_start_ts');
@@ -624,8 +822,8 @@ class gps_tracker extends eqLogic {
             $cmd_gps->save();
           }
         }
-        // Log position courante vers GPS log file (pas si vehicule à l'arrêt "à la maison" et pas si "trajets alternatifs")
-        if (($gps_pts_ok == true) && (($kinetic_moving > 0) || ($previous_kinetic_moving > 0))) {
+        // Log position courante vers GPS log file (pas si vehicule à l'arrêt "à la maison"). Et pas d'écriture pour le serveur traccar (data_dir = "")
+        if (($gps_pts_ok == true) && (($kinetic_moving > 0) || ($previous_kinetic_moving > 0)) && ($data_dir != "")) {
           // Record des donnees issues de l'historique si elles existent
           if (count($gps_position_hist) > 0) {
             foreach ($gps_position_hist as $gps_posi) {

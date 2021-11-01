@@ -187,7 +187,6 @@ function stat_usage () {
   var trips_number = 0;
   var trips_total_duration = 0;
   var trips_total_distance = 0;
-  var trips_total_conso = 0;
   var trip_ts_first = Date.now()/1000;
   var trip_ts_last  = 0;
 
@@ -696,13 +695,9 @@ function trips_stats(stat_data) {
   // mise en forme des donnnes
   var sum_dist = [];
   var dt_dist = [[]];
-  var dt_conso = [[]];
-  var dt_energy = [[]];
   for (y=2020; y<2040; y++) {
     sum_dist[y] = 0;
     dt_dist[y] = [];
-    dt_conso[y] = [];
-    dt_energy[y] = [];
     for (m=1; m<=12; m++) {
       // distance
       dt_dist[y][m-1] = 0;

@@ -1,7 +1,7 @@
 <?php
 
-// Fonctions de connexion aux API PSA
-// ==================================
+// Fonctions de connexion aux API du serveur TKSTAR
+// ================================================
 class api_tkstar {
 
   // Constantes pour la classe

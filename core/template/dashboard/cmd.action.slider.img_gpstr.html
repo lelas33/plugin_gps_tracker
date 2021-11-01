@@ -45,6 +45,8 @@
         if      (eq_path == "tks_def") path = "img_def/tks_def.png";
         else if (eq_path == "jcn_def") path = "img_def/jcn_def.png";
         else if (eq_path == "jmt_def") path = "img_def/jmt_def.png";
+        else if (eq_path == "trc_def") path = "img_def/trc_def.png";
+        else if (eq_path == "gen_def") path = "img_def/gen_def.png";
         else path = eq_path + "/img.png";
         var img_path = '<img src="plugins/gps_tracker/data/' + path + '" style="max-height:150px;max-width:250px;height:auto;width:auto;"/>';
         $('.cmd[data-cmd_id=#id#] .picture').empty().append(img_path);

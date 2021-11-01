@@ -48,6 +48,17 @@ else if ($tracker_type == "JMT") {
   $eq_path = "jmt_".$jm_getposition_cmdf;
   $eq_def = "jmt_def.png";
 }
+else if ($tracker_type == "TRC") {
+  $trc_idunic   = $eqLogic->getConfiguration("trc_idunic");
+  $eq_path = "trc_".$trc_idunic;
+  $eq_def = "trc_def.png";
+}
+else if ($tracker_type == "GEN") {
+  $gen_getposition_cmd  = $eqLogic->getConfiguration("cmd_gen_position");
+  $gen_getposition_cmdf = str_replace ('#', '', $gen_getposition_cmd);
+  $eq_path = "gen_".$gen_getposition_cmdf;
+  $eq_def = "gen_def.png";
+}
 
 if ($default_image == False) {
   $img_path = "plugins/gps_tracker/data/".$eq_path."/img.png";    
@@ -70,7 +81,7 @@ if (is_object($cmd_mlg)) {
 
 <div class="row" id="div_gps_tracker">
     <div class="row">
-        <div class="col-lg-8 col-lg-offset-2" style="height: 260px;padding-top:10px">
+        <div class="col-lg-10 col-lg-offset-1" style="height: 260px;padding-top:10px">
             <fieldset style="border: 1px solid #e5e5e5; border-radius: 5px 5px 0px 5px;background-color:#f8f8f8">
               <div class="pull-left" style="padding-top:10px;padding-left:24px;color: #333;font-size: 1.5em;"> <span id="spanTitreResume">Sélection parmis vos traceurs GPS</span>
                 <select id="eqlogic_select" onchange="ChangeCarImage()" style="color:#555;font-size: 15px;border-radius: 3px;border:1px solid #ccc;">
@@ -92,7 +103,7 @@ if (is_object($cmd_mlg)) {
     </div>
     <div>
       <div class="row">
-      <div class="col-lg-8 col-lg-offset-2" style="padding-top:10px">
+      <div class="col-lg-10 col-lg-offset-1" style="padding-top:10px">
         <ul class="nav nav-tabs" role="tablist">
           <li role="presentation" class="active"><a href="#car_trips_tab" aria-controls="home" role="tab" data-toggle="tab"><i class="fa fa-tachometer"></i> {{Trajets}}</a></li>
           <li role="presentation"><a href="#car_stat_tab" aria-controls="home" role="tab" data-toggle="tab"><i class="fa fa-tachometer"></i> {{Statistiques}}</a></li>
@@ -104,7 +115,7 @@ if (is_object($cmd_mlg)) {
       <div class="tab-content" style="height:1200px;">
         <div role="tabpanel" class="tab-pane" id="car_trips_tab">
           <div class="row">
-            <div class="col-lg-8 col-lg-offset-2" style="height: 150px;padding-top:10px;">
+            <div class="col-lg-10 col-lg-offset-1" style="height: 150px;padding-top:10px;">
               <form class="form-horizontal">
                 <fieldset style="border: 1px solid #e5e5e5; border-radius: 5px 5px 0px 5px;background-color:#f8f8f8">
                   <div style="min-height: 10px;">
@@ -137,7 +148,7 @@ if (is_object($cmd_mlg)) {
             </div>
           </div>
           <div class="row">
-              <div class="col-lg-8 col-lg-offset-2">
+              <div class="col-lg-10 col-lg-offset-1">
                   <form class="form-horizontal">
                        <fieldset style="border: 1px solid #e5e5e5; border-radius: 5px 5px 5px 5px;background-color:#f8f8f8">
                            <div style="padding-top:10px;padding-left:24px;padding-bottom:10px;color: #333;font-size: 1.5em;">
@@ -150,8 +161,8 @@ if (is_object($cmd_mlg)) {
                        <div style="min-height: 10px;"></div>
                    </form>
               </div>
-              <div class="col-lg-8 col-lg-offset-2">
-                <div id="trips_list" style="float:left;width:45%">
+              <div class="col-lg-10 col-lg-offset-1">
+                <div id="trips_list" style="float:left;width:35%">
                   <div id='div_hist_liste' style="font-size: 1.2em;"></div>
                   <div id='div_graph_alti'  style="padding-top:10px;min-height:200px;display: none;"></div>
                   <div id='div_graph_speed'  style="padding-top:10px;min-height:200px;display: none;"></div>
@@ -159,16 +170,16 @@ if (is_object($cmd_mlg)) {
                     <table id="trip_liste" class="display compact" width="100%"></table>
                   </div>
                 </div>
-                <div id="trips_separ" style="margin-left:45%;width:1%">
+                <div id="trips_separ" style="margin-left:35%;width:1%">
                 </div>
-                <div id="trips_map" style="margin-left:46%;width:54%">
+                <div id="trips_map" style="margin-left:36%;width:64%">
                 </div>
               </div>
           </div>
         </div>
         <div role="tabpanel" class="tab-pane" id="car_stat_tab">
           <div class="row">
-              <div class="col-lg-8 col-lg-offset-2" style="padding-top:10px">
+              <div class="col-lg-10 col-lg-offset-1" style="padding-top:10px">
                 <form class="form-horizontal">
                      <fieldset style="border: 1px solid #e5e5e5; border-radius: 5px 5px 5px 5px;background-color:#f8f8f8">
                          <div style="padding-top:10px;padding-left:24px;padding-bottom:10px;color: #333;font-size: 1.5em;">
@@ -187,7 +198,7 @@ if (is_object($cmd_mlg)) {
         </div>
         <div role="tabpanel" class="tab-pane" id="car_config_tab">
           <div class="row">
-              <div class="col-lg-8 col-lg-offset-2">
+              <div class="col-lg-10 col-lg-offset-1">
                   <form class="form-horizontal">
                      <fieldset style="border: 1px solid #e5e5e5; border-radius: 5px 5px 5px 5px;background-color:#f8f8f8">
                         <div style="padding-top:10px;padding-left:24px;padding-bottom:10px;color: #333;font-size: 1.5em;">

@@ -17,6 +17,7 @@
  */
 
 require_once dirname(__FILE__) . '/../../3rdparty/api_tkstar.php';
+require_once dirname(__FILE__) . '/../../3rdparty/api_traccar.php';
 
 define("GPS_FILES_DIR", "/../../data/");
 
@@ -49,11 +50,19 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
       $jd_getposition_cmd  = $eq->getConfiguration("cmd_jm_position");
       $data_dir = "jmt_".str_replace ('#', '', $jd_getposition_cmd);
     }
+    else if ($tracker_type == "GEN") {
+      $jd_getposition_cmd  = $eq->getConfiguration("cmd_gen_position");
+      $data_dir = "gen_".str_replace ('#', '', $jd_getposition_cmd);
+    }
+    else if ($tracker_type == "TRC") {
+      get_car_trips_gps_traccar($eq_id, $ts_start, $ts_end);
+      return;
+    }
+
   }
   else {
     return;
   }
-
   // Lecture des trajets
   // -------------------
   // ouverture du fichier de log: trajets
@@ -126,6 +135,58 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
 }
 
 
+// ====================================================================================================
+// Fonction de lecture de tous les trajets d'une voiture: version spécifique pour les traceurs traccar
+// ====================================================================================================
+function get_car_trips_gps_traccar($eq_id, $ts_start, $ts_end)
+{
+  global $cars_dt;
+
+  $iso8601_st = date('Y-m-d\TH:i:s\Z', $ts_start);
+  $iso8601_en = date('Y-m-d\TH:i:s\Z', $ts_end);
+  // log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:iso8601_st=>'.$iso8601_st);
+  // log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:iso8601_en=>'.$iso8601_en);
+  $eq = eqLogic::byId(intval($eq_id));
+  if ($eq->getIsEnable()) {
+      $trc_url      = $eq->getConfiguration("trc_url");
+      $trc_account  = $eq->getConfiguration("trc_account");
+      $trc_password = $eq->getConfiguration("trc_password");
+      $trc_id       = $eq->getConfiguration("trc_id");
+  }
+  else
+    return;
+  if (($trc_url == "") || ($trc_account == "") || ($trc_password == "") || ($trc_id == "")) {
+    log::add('gps_tracker','error',"get_car_trips_gps: TRC->Paramètres de Login Traccar non définis");
+    return;
+  }
+  $session_traccar = new api_traccar();
+  $session_traccar->login($trc_url, $trc_account, $trc_password);
+  // lecture des trajets depuis la base traccar
+  $cars_dt["trips"] = [];
+  $res = $session_traccar->traccar_get_trips($trc_id, $iso8601_st, $iso8601_en);
+  $nb_trips = count($res);
+  for ($i=0; $i<$nb_trips; $i++) {
+    $cars_dt["trips"][$i] = $res[$i];
+  }
+  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:nb_lines trips =>'.$nb_trips);
+
+  // lecture des positions GPS depuis la base traccar
+  $cars_dt["gps"] = [];
+  $res = $session_traccar->traccar_get_route($trc_id, $iso8601_st, $iso8601_en);
+  $nb_pts = count($res);
+  for ($i=0; $i<$nb_pts; $i++) {
+    $cars_dt["gps"][$i] = $res[$i];
+  }
+  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:nb_lines trips =>'.$nb_pts);
+
+  // Ajoute les coordonnées du domicile pour utilisation par javascript
+  $latitute=config::byKey("info::latitude");
+  $longitude=config::byKey("info::longitude");
+  $cars_dt["home"] = $latitute.",".$longitude;
+  return;
+}
+
+
 // ========================================================
 // Fonction de capture de la position copurante du vehicule
 // ========================================================
@@ -140,7 +201,7 @@ function get_current_position($eq_id)
   }
   
   $current_position = [];
-  $current_position["status"] = "OK";
+  $current_position["status"] = "KO";
 
   // Recuperation des donnees du traceur GPS, selon son type
   if ($tracker_type == "TKS") {
@@ -178,12 +239,12 @@ function get_current_position($eq_id)
       log::add('gps_tracker','error', $tracker_name."->Erreur Login API Traceur GPS (Access data)");
       $lat = 0;
       $lon = 0;
-      }
+    }
     else {
       // extraction des donnees utiles
       $lat = floatval($ret["result"]->lat);
       $lon = floatval($ret["result"]->lng);
-      $current_position["status"] = "KO";
+      $current_position["status"] = "OK";
     }
   }
   else if ($tracker_type == "JCN") {
@@ -198,11 +259,12 @@ function get_current_position($eq_id)
     $gps_array = explode(",", $gps_position);
     $lat = floatval($gps_array[0]);
     $lon = floatval($gps_array[1]);
+    $current_position["status"] = "OK";
   }
   else if ($tracker_type == "JMT") {
     // execution commande position pour l'objet suivit (Jeedom Connect)
     $jd_getposition_cmdname = str_replace('#', '', $eq->getConfiguration('cmd_jm_position'));
-    $jd_getposition_cmd  = cmd::byId($jd_getposition_cmdname);
+    $jd_getposition_cmd = cmd::byId($jd_getposition_cmdname);
     if (!is_object($jd_getposition_cmd)) {
       throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
     }
@@ -211,8 +273,48 @@ function get_current_position($eq_id)
     $gps_array = explode(",", $gps_position);
     $lat = floatval($gps_array[0]);
     $lon = floatval($gps_array[1]);
+    $current_position["status"] = "OK";
   }
-  
+  if ($tracker_type == "TRC") {
+    $trc_url      = $eq->getConfiguration("trc_url");
+    $trc_account  = $eq->getConfiguration("trc_account");
+    $trc_password = $eq->getConfiguration("trc_password");
+    $trc_id       = $eq->getConfiguration("trc_id");
+    if (($trc_url == "") || ($trc_account == "") || ($trc_password == "") || ($trc_id == "")) {
+      log::add('gps_tracker','error',"postSave: TRC->Paramètres de Login Traccar non définis");
+      return;
+    }
+    $session_traccar = new api_traccar();
+    $session_traccar->login($trc_url, $trc_account, $trc_password);
+    // Capture des donnes courantes issues du GPS
+    $res = $session_traccar->traccar_get_positions($trc_id);
+    if ($res["status"] == "KO") {
+      log::add('gps_tracker','error', $tracker_name."->Erreur position traceur traccar");
+      $lat = 0;
+      $lon = 0;
+    }
+    else {
+      // extraction des donnees utiles
+      $lat = floatval($res["lat"]);
+      $lon = floatval($res["lon"]);
+      $current_position["status"] = "OK";
+    }
+  }
+  else if ($tracker_type == "GEN") {
+    // execution commande position pour l'objet suivit (generique)
+    $gen_getposition_cmdname = str_replace('#', '', $eq->getConfiguration('cmd_gen_position'));
+    $gen_getposition_cmd = cmd::byId($gen_getposition_cmdname);
+    if (!is_object($gen_getposition_cmd)) {
+      throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
+    }
+    $gps_position = $gen_getposition_cmd->execCmd();
+    // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
+    $gps_array = explode(",", $gps_position);
+    $lat = floatval($gps_array[0]);
+    $lon = floatval($gps_array[1]);
+    $current_position["status"] = "OK";
+  }
+
   $current_position["veh"]= $lat.",".$lon;
 
   // Ajoute les coordonnées du domicile pour utilisation par javascript
@@ -232,6 +334,7 @@ function get_car_trips_stats($eq_id)
   $eq = eqLogic::byId(intval($eq_id));
   if ($eq->getIsEnable()) {
     $tracker_type = $eq->getConfiguration("type_tracker");
+    log::add('gps_tracker','debug', "get_car_trips_stats:tracker_type: ".$tracker_type);
     $data_dir = "";
     if ($tracker_type == "TKS") {
       $imei_id     = $eq->getConfiguration("tkstar_imei");
@@ -244,6 +347,10 @@ function get_car_trips_stats($eq_id)
     else if ($tracker_type == "JMT") {
       $jd_getposition_cmd  = $eq->getConfiguration("cmd_jm_position");
       $data_dir = "jmt_".str_replace ('#', '', $jd_getposition_cmd);
+    }
+    else if ($tracker_type == "GEN") {
+      $jd_getposition_cmd  = $eq->getConfiguration("cmd_gen_position");
+      $data_dir = "gen_".str_replace ('#', '', $jd_getposition_cmd);
     }
   }
   else {
@@ -262,13 +369,12 @@ function get_car_trips_stats($eq_id)
   if ($fcar) {
     while (($buffer = fgets($fcar, 4096)) !== false) {
       // extrait les timestamps debut et fin du trajet
-      list($tr_tss, $tr_tse, $tr_ds, $tr_batt) = explode(",", $buffer);
+      list($tr_tss, $tr_tse, $tr_ds) = explode(",", $buffer);
       $tsi_s = intval($tr_tss);
       $tsi_e = intval($tr_tse);
       $trips[$line]["tss"]   = intval($tr_tss);
       $trips[$line]["tse"]   = intval($tr_tse);
       $trips[$line]["dist"]  = floatval($tr_ds);
-      $trips[$line]["conso"] = (floatval($tr_batt) * $cfg_batt_capacity)/100.0;  // conso en kWh
       $line = $line + 1;
     }
   }
@@ -280,7 +386,6 @@ function get_car_trips_stats($eq_id)
   $trip_stat["dist"]  = [[]];
   $trip_stat["conso"] = [[]];
   $trip_stat["nb_trips"] = $nb_trips;
-  $trip_stat["cfg_cost_kwh"] = $cfg_cots_kwh;
   for ($tr=0; $tr<$nb_trips; $tr++) {
     $tss = $trips[$tr]["tss"];
     $year  = intval(date('Y', $tss));  // Year => ex 2020
@@ -290,12 +395,6 @@ function get_car_trips_stats($eq_id)
     }
     else {
       $trip_stat["dist"][$year][$month] = $trips[$tr]["dist"];
-    }
-    if (isset($trip_stat["conso"][$year][$month])){
-      $trip_stat["conso"][$year][$month] += $trips[$tr]["conso"];
-    }
-    else {
-      $trip_stat["conso"][$year][$month] = $trips[$tr]["conso"];
     }
   }
   return($trip_stat);
@@ -319,6 +418,28 @@ function set_mileage($eq_id, $new_mileage)
   }
   return ($ret);
 }
+
+
+// ======================================================
+// Fonction de chargement de la liste des devices traccar
+// ======================================================
+function trc_getDevices($eq_id)
+{
+  $ret = [];
+  $ret["status"] = "KO";
+  $session_traccar = new api_traccar();
+  $eq = eqLogic::byId(intval($eq_id));
+  if ($eq->getIsEnable()) {
+    $trc_url      = $eq->getConfiguration("trc_url");
+    $trc_account  = $eq->getConfiguration("trc_account");
+    $trc_password = $eq->getConfiguration("trc_password");
+    $session_traccar->login($trc_url, $trc_account, $trc_password);
+    $ret = $session_traccar->traccar_get_devices();
+    $ret["status"] = "OK";
+  }
+  return ($ret);
+}
+
 
 // =====================================
 // Gestion des commandes recues par AJAX
@@ -395,6 +516,16 @@ try {
         $data_dir = "jmt_".str_replace ('#', '', $jd_getposition_cmd);
         $data_def = "jmt_def.png";
       }
+      else if ($tracker_type == "TRC") {
+        $trc_idunic = $eq->getConfiguration("trc_idunic");
+        $data_dir = "trc_".$trc_idunic;        
+        $data_def = "trc_def.png";
+      }
+      else if ($tracker_type == "GEN") {
+        $jd_getposition_cmd  = $eq->getConfiguration("cmd_gen_position");
+        $data_dir = "gen_".str_replace ('#', '', $jd_getposition_cmd);
+        $data_def = "gen_def.png";
+      }
     }
     if ($default_image == False) {
       $path = "plugins/gps_tracker/data/".$data_dir."/img.png";    
@@ -404,6 +535,13 @@ try {
     }
     log::add('gps_tracker', 'info', 'Ajax:getImagePath =>'.$path);
     ajax::success($path);
+    }
+  else if (init('action') == 'trc_getDevices') {
+    $eq_id = init('eq_id');
+    log::add('gps_tracker', 'info', 'Ajax:trc_getDevices. (eq_id='.$eq_id.')');
+    $ret = trc_getDevices($eq_id);
+    $ret_json = json_encode ($ret);
+    ajax::success($ret_json);
     }
     
 

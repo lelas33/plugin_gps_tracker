@@ -25,16 +25,36 @@ $( "#tracker_select" ).change(function() {
     $("#param_tks").show();
     $("#param_jcn").hide();
     $("#param_jmt").hide();
+    $("#param_trc").hide();
+    $("#param_gen").hide();
   }
   else if (sel_tracker == "JCN") {
     $("#param_tks").hide();
     $("#param_jcn").show();
     $("#param_jmt").hide();
+    $("#param_trc").hide();
+    $("#param_gen").hide();
   }
   else if (sel_tracker == "JMT") {
     $("#param_tks").hide();
     $("#param_jcn").hide();
     $("#param_jmt").show();
+    $("#param_trc").hide();
+    $("#param_gen").hide();
+  }
+  else if (sel_tracker == "TRC") {
+    $("#param_tks").hide();
+    $("#param_jcn").hide();
+    $("#param_jmt").hide();
+    $("#param_trc").show();
+    $("#param_gen").hide();
+  }
+  else if (sel_tracker == "GEN") {
+    $("#param_tks").hide();
+    $("#param_jcn").hide();
+    $("#param_jmt").hide();
+    $("#param_trc").hide();
+    $("#param_gen").show();
   }
 });
 
@@ -64,9 +84,67 @@ $('.load_image').off('change', '#load_image_input').on('change', '#load_image_in
     contentType: false,
     processData: false
   });
-
-
 });
+
+var trc_devices = null;
+var trc_devices_idx = 0;
+
+// Chargement des devices traccar depuis la base: appel ajax
+$('#load_traccar_devices_conf').on('click',function(){
+  // recuperation de l'ID du eqlogic en cours
+  var eq_id = $('.eqLogicAttr[data-l1key=id]').value();
+  if (eq_id == "") {
+    return;
+  }
+  if (trc_devices == null) {
+    // Premier click sur le bouton "liste"
+    $.ajax({
+        type: 'POST',
+        url: 'plugins/gps_tracker/core/ajax/gps_tracker.ajax.php',
+        data: {
+            action: 'trc_getDevices',
+            eq_id: eq_id,  // Id de l'objet eqlogic
+        },
+        dataType: 'json',
+        error: function (request, status, error) {
+            alert("loadData:Error"+status+"/"+error);
+            handleAjaxError(request, status, error);
+        },
+        success: function (data) {
+            console.log("[loadData] Objet gps_tracker récupéré : " + eq_id);
+            if (data.state != 'ok') {
+                $('#div_alert').showAlert({message: data.result, level: 'danger'});
+                return;
+            }
+            // alert("Retour:"+data.result);
+            trc_devices = JSON.parse(data.result);
+            if (trc_devices.nb_dev > 0) {
+              // update select list for devices
+              var $el_name = $("#trc_name_input");
+              var $el_idun = $("#trc_idunic_input");
+              var $el_id   = $("#trc_id_input");
+              $el_name.val(trc_devices.dev[0].name);
+              $el_idun.val(trc_devices.dev[0].unique_id);
+              $el_id.val(trc_devices.dev[0].id);
+            }
+            else {
+              alert("Pas de devices dans la base traccar");
+            }
+        }
+    });
+  }
+  else {
+    // click suivants sur le bouton "liste"
+    trc_devices_idx = (trc_devices_idx + 1) % trc_devices.nb_dev;
+    var $el_name = $("#trc_name_input");
+    var $el_idun = $("#trc_idunic_input");
+    var $el_id   = $("#trc_id_input");
+    $el_name.val(trc_devices.dev[trc_devices_idx].name);
+    $el_idun.val(trc_devices.dev[trc_devices_idx].unique_id);
+    $el_id.val(trc_devices.dev[trc_devices_idx].id);
+  }
+});
+
 
 // Lorsque le document est chargé
 $('.eqLogicAttr[data-l1key=id]').change(function() {
@@ -202,8 +280,3 @@ function addCmdToTable(_cmd) {
 }
 
 $("#table_cmd").sortable({axis: "y", cursor: "move", items: ".cmd", placeholder: "ui-state-highlight", tolerance: "intersect", forcePlaceholderSize: true});
-
-
-
-
-
