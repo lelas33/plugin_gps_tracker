@@ -10,3 +10,9 @@
 - Ajout du traceur téléphone avec appli Jeemate
 - Gestion de l'historique des positions GPS sur les applis JeedomConnect et Jeemate pour une meilleure précision des trajets
 - Ajout d'une image par défaut pour chaque équipement
+
+## 7/11/2021: Tag gps_trk_v0.3
+
+- Ajout d'un traceur générique à partir d'une info Jeedom
+- Ajout d'un traceur dans une base Traccar
+- Agrandissement de la carte dans le panel

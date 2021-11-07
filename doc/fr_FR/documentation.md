@@ -37,38 +37,60 @@ Par source Github:
 
 ## Configuration
 Une fois l'installation effectuée:<br>
-Sur l'onglet "**Equipement**", sélectionner le type de traceur GPS utilisé (TK905, JeedomConnect ou Jeemate), et choisissez l'objet parent.<br>
+Sur l'onglet "**Equipement**", sélectionner le type de traceur GPS utilisé (TK905, JeedomConnect, Jeemate, GPS Traccar ou GPS générique), et choisissez l'objet parent.<br>
 Vous pouvez ensuite télécharger une image de l'objet suivi, qui sera reprise dans le widget et le pannel.<br>
-Il est possible de sélectionner une image par défaut en cochant la case correspondante.
+Il est possible de sélectionner une image par défaut en cochant la case correspondante.<br>
+Il faut saisir ensuite quelques informations complémentaires selon le type de traceur.<br>
 
 <p align="left">
   <img src="../images/config_equipement.png" width="800" title="Configuration équipement">
 </p>
 
-<p align="left">
-  <img src="../images/config_equipement2.png" width="800" title="Configuration équipement">
-</p>
-
-<p align="left">
-  <img src="../images/config_equipement3.png" width="800" title="Configuration équipement">
-</p>
-
-Il faut saisir ensuite quelques informations complémentaires selon le type de traceur.<br>
 Pour le traceur TKSTAR:
 * Le Numéro IMEI / ID du traceur
 * Les paramètres de login au compte associé. (Login / mot de passe)
 
+<p align="left">
+  <img src="../images/config_equipement2.png" width="800" title="Configuration équipement">
+</p>
+
 Pour le traceur Jeedom connect, il faut saisir le paramètre suivant qui est un champ "info" de votre équipement Téléphone dans le plugin JeedomConnect.
 * Position: [Position]
+Il faut également activer l'option "Ajouter données à la position" dans l'équipement JeedomConnect.<br>
+Cela permettra d'ajouter l'altitude, l'activité et le niveau de batterie aux informations de position.<br>
+Il sera donc possible de visualiser la coupe de profil des trajets.<br>
+
+<p align="left">
+  <img src="../images/config_equipement3.png" width="800" title="Configuration équipement">
+</p>
 
 Pour le traceur Jeemate connect, il faut saisir les 3 paramètres suivants qui sont des champs "info" de votre équipement Téléphone dans le plugin JeedomMate.
 * Position: [(GeoLoc) Position]
 * Activité: [(GeoLoc) Type activité]
 * Batterie: [State Battery]
 
-Il faut également activer l'option "Ajouter données à la position" dans l'équipement JeedomConnect.<br>
-Cela permettra d'ajouter l'altitude, l'activité et le niveau de batterie aux informations de position.<br>
-Il sera donc possible de visualiser la coupe de profil des trajets.<br>
+<p align="left">
+  <img src="../images/config_equipement4.png" width="800" title="Configuration équipement">
+</p>
+
+Pour le traceur GPS Traccar, il faut saisir les 3 paramètres suivants pour définir l'accès au serveur Traccar dans lequel votre traceur GPS est enregistré.
+* URL du serveur tracecar: URL (interne ou externe) de votre serceur traccar, avec le numéro de port utilisé. Par exemple http://192.168.1.1:8082
+* Login de connexion au serveur
+* Mot de passe de connexion au serveur
+Lorsque ces 3 premiers paramètres sont définis, vous pouvez sauvegarder votre équipement une première fois.<br>
+Ensuite, revenez sur cette page de configuration de l'équipement, et en sélectionnant le bouton [liste "devices"], vous vérez les 3 champs suivants se remplir  
+avec les dentifiants des traceurs GPS contenus dans la base traccar.<br>
+Si vous avez plusieurs traceurs dans la base, vous pouvez les faire défiler en cliquant plusieurs fois sur le bouton [liste "devices"].<br>
+Lorsque le bon traceur est choisi, faire à nouveau une sauvegarde de l'équipement.<br>
+
+<p align="left">
+  <img src="../images/config_equipement5.png" width="800" title="Configuration équipement">
+</p>
+
+Pour le traceur GPS Générique, les informations attendues sont issues du champ information d'un équipement Jeedom, sous la forme de 4 paramètres séparés par des virgules.<br>
+Il faut donc définir les 5 paramètres suivants:
+* Position: Lien vers le champ information contenant les informations du traceur.
+* Valeur de param 1 à 4: configuration respective des 4 paramètres issus du champ précédent. Cela peut être Latitude, Longitude, Altidude, Vitesse ou bien inutilisé.
 
 La page du panel à besoin de connaitre les coordonnées GPS de stationnement habituel de la voiture afin de centrer la carte pour l’affichage des trajets. <br>
 Pour cela, il faut renseigner ces coordonnées GPS dans la page de configuration de jeedom.<br>
