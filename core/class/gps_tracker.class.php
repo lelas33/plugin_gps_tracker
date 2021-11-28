@@ -80,7 +80,8 @@ class gps_tracker extends eqLogic {
       // filtrage premier passage
       $tracker_type = $this->getConfiguration("type_tracker");
       $default_image = $this->getConfiguration("img_default");
-      log::add('gps_tracker','debug',"postSave:Type traceur:".$tracker_type);
+      $eq_id = $this->getId();
+      log::add('gps_tracker','debug',"postSave:Type traceur:".$tracker_type." / Eq.ID=".$eq_id);
 
       // Pour les traceurs TKSTAR, verification du Login API
       if ($tracker_type == "TKS") {
@@ -108,9 +109,8 @@ class gps_tracker extends eqLogic {
           log::add('gps_tracker','error',"postSave: JCN->Commande d'accès à la position GPS non definie");
           return;
         }
-        $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
-        $data_dir = "jcn_".$jd_getposition_cmdf;
-        log::add('gps_tracker','debug',"postSave: JCN-> TEL_ID=".$jd_getposition_cmdf." (données:data/".$data_dir.")" );
+        $data_dir = "jcn_".$eq_id;
+        log::add('gps_tracker','debug',"postSave: JCN-> EQ_ID=".$eq_id." (données:data/".$data_dir.")" );
       }
       // Pour les traceurs JeeMate, verification de la commande "get GPS position"
       else if ($tracker_type == "JMT") {
@@ -119,9 +119,8 @@ class gps_tracker extends eqLogic {
           log::add('gps_tracker','error',"postSave: JMT->Commande d'accès à la position GPS non definie");
           return;
         }
-        $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
-        $data_dir = "jmt_".$jd_getposition_cmdf;
-        log::add('gps_tracker','debug',"postSave: JMT-> TEL_ID=".$jd_getposition_cmdf." (données:data/".$data_dir.")" );
+        $data_dir = "jmt_".$eq_id;
+        log::add('gps_tracker','debug',"postSave: JMT-> EQ_ID=".$eq_id." (données:data/".$data_dir.")" );
       }
       // Pour les traceurs Traccar, verification du login a la base traccar
       else if ($tracker_type == "TRC") {
@@ -146,13 +145,14 @@ class gps_tracker extends eqLogic {
       // Pour les traceur Generiques, verification de la commande "get GPS position"
       else if ($tracker_type == "GEN") {
         $jd_getposition_cmd  = $this->getConfiguration("cmd_gen_position");
-        if ($jd_getposition_cmd == "") {
+        $jd_getlat_cmd       = $this->getConfiguration("cmd_gen_info_lat");
+        $jd_getlon_cmd       = $this->getConfiguration("cmd_gen_info_lon");
+        if (($jd_getposition_cmd == "") && (($jd_getlat_cmd == "") || ($jd_getlon_cmd == ""))) {
           log::add('gps_tracker','error',"postSave: GEN->Commande d'accès à la position GPS non definie");
           return;
         }
-        $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
-        $data_dir = "gen_".$jd_getposition_cmdf;
-        log::add('gps_tracker','debug',"postSave: GEN-> TEL_ID=".$jd_getposition_cmdf." (données:data/".$data_dir.")" );
+        $data_dir = "gen_".$eq_id;
+        log::add('gps_tracker','debug',"postSave: GEN-> EQ_ID=".$eq_id." (données:data/".$data_dir.")" );
       }
 
       // creation de la liste des commandes / infos
@@ -453,6 +453,7 @@ class gps_tracker extends eqLogic {
       $minute = intval(date("i"));
       $heure  = intval(date("G"));
       $tracker_name = $this->getHumanName();
+      $eq_id = $this->getId();
 
       // Pour les traceur TKSTAR, verification du Login API
       if ($tracker_type == "TKS") {
@@ -470,8 +471,7 @@ class gps_tracker extends eqLogic {
         if ($jd_getposition_cmd == "") {
           return;
         }
-        $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
-        $data_dir = "jcn_".$jd_getposition_cmdf;
+        $data_dir = "jcn_".$eq_id;
       }
       // Pour les traceurs JeeMate, verification de la commande "get GPS position"
       else if ($tracker_type == "JMT") {
@@ -479,8 +479,7 @@ class gps_tracker extends eqLogic {
         if ($jd_getposition_cmd == "") {
           return;
         }
-        $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
-        $data_dir = "jmt_".$jd_getposition_cmdf;
+        $data_dir = "jmt_".$eq_id;
       }
       // Pour les traceurs tracccar, verification verification du Login au serveur
       else if ($tracker_type == "TRC") {
@@ -496,11 +495,12 @@ class gps_tracker extends eqLogic {
       // Pour les traceurs Generiques, verification de la commande "get GPS position"
       else if ($tracker_type == "GEN") {
         $jd_getposition_cmd  = $this->getConfiguration("cmd_gen_position");
-        if ($jd_getposition_cmd == "") {
+        $jd_getlat_cmd       = $this->getConfiguration("cmd_gen_info_lat");
+        $jd_getlon_cmd       = $this->getConfiguration("cmd_gen_info_lon");
+        if (($jd_getposition_cmd == "") && (($jd_getlat_cmd == "") || ($jd_getlon_cmd == ""))) {
           return;
         }
-        $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
-        $data_dir = "gen_".$jd_getposition_cmdf;
+        $data_dir = "gen_".$eq_id;
       }
 
       // Fichiers de logs
@@ -710,38 +710,115 @@ class gps_tracker extends eqLogic {
           // ------- Traceur Generique ------
           // execution commande position pour l'objet suivi
           $jd_getposition_cmdname = str_replace('#', '', $this->getConfiguration('cmd_gen_position'));
-          $jd_getposition_cmd  = cmd::byId($jd_getposition_cmdname);
-          if (!is_object($jd_getposition_cmd)) {
-            throw new Exception(__('Impossible de trouver la commande gps position', __FILE__));
+          $gen_sep = ($jd_getposition_cmdname == "")? 1:0;
+          $jd_getposition_cmd= cmd::byId($jd_getposition_cmdname);
+          $jd_getlat_cmdname = str_replace('#', '', $this->getConfiguration('cmd_gen_info_lat'));
+          $jd_getlat_cmd     = cmd::byId($jd_getlat_cmdname);
+          $jd_getlon_cmdname = str_replace('#', '', $this->getConfiguration('cmd_gen_info_lon'));
+          $jd_getlon_cmd     = cmd::byId($jd_getlon_cmdname);
+          // log::add('gps_tracker','debug', $tracker_name."-> gen_sep: ".$gen_sep);
+          if (($gen_sep == 0) && (!is_object($jd_getposition_cmd))) {
+            throw new Exception(__('Impossible de trouver la commande gps position: Gen', __FILE__));
+          }
+          if (($gen_sep == 1) && ((!is_object($jd_getlat_cmd)) || (!is_object($jd_getlon_cmd)))) {
+            throw new Exception(__('Impossible de trouver la commande gps position: Gen sep', __FILE__));
           }
           $mvt_cpt = $cmd_kinetic->getConfiguration('mvt_cpt');
           if (!isset($mvt_cpt) || ($mvt_cpt == ""))
             $mvt_cpt = 0;
           $batt_level = 0;
-          $param = array($this->getConfiguration("gen_param1"), $this->getConfiguration("gen_param2"),
-                         $this->getConfiguration("gen_param3"), $this->getConfiguration("gen_param4"));
-          // Capture l'historique de la derniere minute
           $debut = date("Y-m-d H:i:s", strtotime("Now")-60);
           $fin = date("Y-m-d H:i:s", strtotime("Now")); 
-          $cmdId = $jd_getposition_cmd->getId();
-          $values = history::all($cmdId, $debut, $fin);
-          $gps_position_hist = [];
-          $prev_posi = $previous_gps_position;
-          $current_milleage = $previous_mileage;
-          foreach ($values as $value) {
-            $date = $value->getDatetime();
-            $posi = $value->getValue();
-            $ret_gps = $this->analyse_gen (strtotime($date), $posi, $prev_posi, $param, $current_milleage, $mvt_cpt);
-            $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
-            array_push($gps_position_hist, $record);
-            log::add('gps_tracker','debug', $tracker_name."->history: record ".$record);
-            $prev_posi = $posi;
-            $current_milleage = $ret_gps["mlg"];
+
+          if ($gen_sep == 0) {
+            // cas des donnes sur un champ info
+            $param = array($this->getConfiguration("gen_param1"), $this->getConfiguration("gen_param2"),
+                           $this->getConfiguration("gen_param3"), $this->getConfiguration("gen_param4"));
+            // Capture l'historique de la derniere minute
+            $cmdId = $jd_getposition_cmd->getId();
+            $values = history::all($cmdId, $debut, $fin);
+            $gps_position_hist = [];
+            $prev_posi = $previous_gps_position;
+            $current_milleage = $previous_mileage;
+            foreach ($values as $value) {
+              $date = $value->getDatetime();
+              $posi = $value->getValue();
+              $ret_gps = $this->analyse_gen (strtotime($date), $posi, $prev_posi, $param, $current_milleage, $mvt_cpt);
+              $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
+              array_push($gps_position_hist, $record);
+              log::add('gps_tracker','debug', $tracker_name."->history: record ".$record);
+              $prev_posi = $ret_gps["posi"];
+              $current_milleage = $ret_gps["mlg"];
+            }
+            // Capture la position courante
+            $gps_position = $jd_getposition_cmd->execCmd();
+            // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
+            $ret_gps = $this->analyse_gen ($ctime, $gps_position, $prev_posi, $param, $current_milleage, $mvt_cpt);
           }
-          // Capture la position courante
-          $gps_position = $jd_getposition_cmd->execCmd();
-          // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
-          $ret_gps = $this->analyse_gen ($ctime, $gps_position, $prev_posi, $param, $current_milleage, $mvt_cpt);
+          else {
+            // cas des donnes sur plusieurs champs info
+            $prev_posi = $previous_gps_position;
+            $current_milleage = $previous_mileage;
+            $param = array("LAT", "LON", "ALT", "SPD");
+            $jd_getalt_cmd = cmd::byId(str_replace('#', '', $this->getConfiguration('cmd_gen_info_alt')));
+            $jd_getspd_cmd = cmd::byId(str_replace('#', '', $this->getConfiguration('cmd_gen_info_spd')));
+
+            // Capture l'historique de la derniere minute
+            $cmdId = $jd_getlat_cmd->getId();
+            $values_lat = history::all($cmdId, $debut, $fin);
+            $cmdId = $jd_getlon_cmd->getId();
+            $values_lon = history::all($cmdId, $debut, $fin);
+            // log::add('gps_tracker','debug', $tracker_name."->history_lat / history_lon: ".count($values_lat)." / ".count($values_lon));
+            if (is_object($jd_getalt_cmd)) {
+              $cmdId = $jd_getalt_cmd->getId();
+              $values_alt = history::all($cmdId, $debut, $fin);
+              // log::add('gps_tracker','debug', $tracker_name."->history_alt: ".count($values_alt));
+            }
+            if (is_object($jd_getspd_cmd)) {
+              $cmdId = $jd_getspd_cmd->getId();
+              $values_spd = history::all($cmdId, $debut, $fin);
+              // log::add('gps_tracker','debug', $tracker_name."->history_spd: ".count($values_spd));
+            }
+            $gps_position_hist = [];
+            $idx = 0;
+            foreach ($values as $values_lat) {
+              $date = $value->getDatetime();
+              $posi_lat = $value->getValue();
+              $posi_lon = $values_lon[$idx]->getValue();
+              $posi = $posi_lat.",".$posi_lon;
+              if (is_object($jd_getalt_cmd)) {
+                $posi_alt = $values_alt[$idx]->getValue();
+                if ($posi_alt != "") $posi .= ",".$posi_alt;
+              }
+              if (is_object($jd_getspd_cmd)) {
+                $posi_spd = $values_spd[$idx]->getValue();
+                if ($posi_spd != "") $posi .= ",".$posi_spd;
+              }
+              $ret_gps = $this->analyse_gen (strtotime($date), $posi, $prev_posi, $param, $current_milleage, $mvt_cpt);
+              $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
+              array_push($gps_position_hist, $record);
+              log::add('gps_tracker','debug', $tracker_name."->history: record ".$record);
+              $prev_posi = $ret_gps["posi"];
+              $current_milleage = $ret_gps["mlg"];
+              $idx++;
+            }
+
+            // Capture la position courante
+            $lat = $jd_getlat_cmd->execCmd();
+            $lon = $jd_getlon_cmd->execCmd();
+            $gps_position = $lat.",".$lon;
+            if (is_object($jd_getalt_cmd)) {
+              $alt = $jd_getalt_cmd->execCmd();
+              if ($alt != "") $gps_position .= ",".$alt;
+            }
+            if (is_object($jd_getspd_cmd)) {
+              $spd = $jd_getspd_cmd->execCmd();
+              if ($spd != "") $gps_position .= ",".$spd;
+            }
+            $ret_gps = $this->analyse_gen ($ctime, $gps_position, $prev_posi, $param, $current_milleage, $mvt_cpt);
+            
+          }
+
           $lat = $ret_gps["lat"];
           $lon = $ret_gps["lon"];
           $vitesse = $ret_gps["vit"];

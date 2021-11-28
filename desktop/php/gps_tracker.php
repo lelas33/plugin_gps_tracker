@@ -271,6 +271,12 @@ $eqLogics = eqLogic::byType($plugin->getId());
                       <label class="col-lg-4"><br>{{Informations complémentaires pour le traceur générique}}</label>
                   </div>
                   <div class="form-group">
+                      <label class="col-lg-2 control-label"></label>
+                      <label class="col-lg-4">{{Cas où les infos GPS sont dans un champ unique, séparés par des virgules}}</label>
+                      <label class="col-lg-1">{{}}</label>
+                      <label class="col-lg-4">{{Cas où les infos GPS sont dans des champs séparés}}</label>
+                  </div>
+                  <div class="form-group">
                       <label class="col-sm-2 control-label">{{Position}}
                         <sup><i class="fas fa-question-circle tooltips" title="{{Informations issues du GPS, sous la forme: param1, param2, param3, param4}}"></i></sup>
                       </label>
@@ -296,6 +302,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <option value="NONE">{{Inutilisé}}</option>
                         </select>
                       </div>
+                      <label class="col-lg-1 control-label">{{Latitude}}</label>
+                      <div class="col-lg-4">
+                        <div class="input-group">
+                          <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_gen_info_lat" placeholder="{{Lien vers info Latitude}}"/>
+                          <span class="input-group-btn">
+                            <a class="btn btn-default listCmdInfoNumeric roundedRight"><i class="fas fa-list-alt"></i></a>
+                          </span>
+                        </div>
+                      </div>
                   </div>
                   <div class="form-group">
                       <label class="col-lg-2 control-label">{{Valeur de param2}}
@@ -309,6 +324,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <option value="SPD">{{Vitesse}}</option>
                             <option value="NONE">{{Inutilisé}}</option>
                         </select>
+                      </div>
+                      <label class="col-lg-1 control-label">{{Longitude}}</label>
+                      <div class="col-lg-4">
+                        <div class="input-group">
+                          <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_gen_info_lon" placeholder="{{Lien vers info Longitude}}"/>
+                          <span class="input-group-btn">
+                            <a class="btn btn-default listCmdInfoNumeric roundedRight"><i class="fas fa-list-alt"></i></a>
+                          </span>
+                        </div>
                       </div>
                   </div>
                   <div class="form-group">
@@ -324,6 +348,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <option value="NONE" selected="selected">{{Inutilisé}}</option>
                         </select>
                       </div>
+                      <label class="col-lg-1 control-label">{{Altitude}}</label>
+                      <div class="col-lg-4">
+                        <div class="input-group">
+                          <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_gen_info_alt" placeholder="{{Lien vers info Altidute}}"/>
+                          <span class="input-group-btn">
+                            <a class="btn btn-default listCmdInfoNumeric roundedRight"><i class="fas fa-list-alt"></i></a>
+                          </span>
+                        </div>
+                      </div>
                   </div>
                   <div class="form-group">
                       <label class="col-lg-2 control-label">{{Valeur de param4}}
@@ -337,6 +370,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
                             <option value="SPD">{{Vitesse}}</option>
                             <option value="NONE" selected="selected">{{Inutilisé}}</option>
                         </select>
+                      </div>
+                      <label class="col-lg-1 control-label">{{Vitesse}}</label>
+                      <div class="col-lg-4">
+                        <div class="input-group">
+                          <input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="cmd_gen_info_spd" placeholder="{{Lien vers info Vitesse}}"/>
+                          <span class="input-group-btn">
+                            <a class="btn btn-default listCmdInfoNumeric roundedRight"><i class="fas fa-list-alt"></i></a>
+                          </span>
+                        </div>
                       </div>
                   </div>
                 </div>

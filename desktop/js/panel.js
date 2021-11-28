@@ -375,6 +375,40 @@ $('#btgps_per_all').on('click',function(){
   loadData();
 });
 
+// Gestion photo de l'objet suivi
+// ==============================
+function ChangeCarImage() {
+  var globalEqLogic = $("#eqlogic_select option:selected").val();
+  // Interrogation du serveur pour avoir le nom et chemin du fichier image de l'objet suivi
+  $.ajax({
+      type: 'POST',
+      url: 'plugins/gps_tracker/core/ajax/gps_tracker.ajax.php',
+      data: {
+          action: 'getImagePath',
+          eq_id: globalEqLogic,  // Id de l'objet eqlogic
+      },
+      dataType: 'json',
+      error: function (request, status, error) {
+          alert("loadData:Error"+status+"/"+error);
+          handleAjaxError(request, status, error);
+      },
+      success: function (data) {
+          console.log("[loadData] Objet gps_tracker récupéré : " + globalEqLogic);
+          // console.log("Pannel->Image path: " + data.result);
+          if (data.state != 'ok') {
+              $('#div_alert').showAlert({message: data.result, level: 'danger'});
+              return;
+          }
+          // alert("Retour:data nb="+data.result);
+          $("#voiture_img").attr("src", data.result);
+          
+      }
+  });
+
+  // Mise à jour infos traceur
+  loadData();
+}
+
 
 
 // Fonction d'initialisation de la carte
@@ -444,8 +478,8 @@ function display_trips(number) {
       pts_lon  = parseFloat(tmp[2]);     // Lon
       pts_alt  = parseFloat(tmp[3]);     // vitesse
       pts_spd  = parseFloat(tmp[4]);     // vitesse
-      mileage     = parseFloat(tmp[5]);     // mileage
-      moving      = parseInt(tmp[6],10);    // kinetic
+      mileage  = parseFloat(tmp[5]);     // mileage
+      moving   = parseInt(tmp[6],10);    // kinetic
       if ((pts_ts>=trip_ts_sta) && (pts_ts<=trip_ts_end)) {
         trip.push([pts_lat, pts_lon]);
         trip_alt.push(pts_alt);

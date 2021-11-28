@@ -37,15 +37,11 @@ if ($tracker_type == "TKS") {
   $eq_def = "tks_def.png";
 }
 else if ($tracker_type == "JCN") {
-  $jd_getposition_cmd  = $eqLogic->getConfiguration("cmd_jc_position");
-  $jd_getposition_cmdf = str_replace ('#', '', $jd_getposition_cmd);
-  $eq_path = "jcn_".$jd_getposition_cmdf;
+  $eq_path = "jcn_".$eq_id;
   $eq_def = "jcn_def.png";
 }
 else if ($tracker_type == "JMT") {
-  $jm_getposition_cmd  = $eqLogic->getConfiguration("cmd_jm_position");
-  $jm_getposition_cmdf = str_replace ('#', '', $jm_getposition_cmd);
-  $eq_path = "jmt_".$jm_getposition_cmdf;
+  $eq_path = "jmt_".$eq_id;
   $eq_def = "jmt_def.png";
 }
 else if ($tracker_type == "TRC") {
@@ -54,9 +50,7 @@ else if ($tracker_type == "TRC") {
   $eq_def = "trc_def.png";
 }
 else if ($tracker_type == "GEN") {
-  $gen_getposition_cmd  = $eqLogic->getConfiguration("cmd_gen_position");
-  $gen_getposition_cmdf = str_replace ('#', '', $gen_getposition_cmd);
-  $eq_path = "gen_".$gen_getposition_cmdf;
+  $eq_path = "gen_".$eq_id;
   $eq_def = "gen_def.png";
 }
 
@@ -87,10 +81,12 @@ if (is_object($cmd_mlg)) {
                 <select id="eqlogic_select" onchange="ChangeCarImage()" style="color:#555;font-size: 15px;border-radius: 3px;border:1px solid #ccc;">
                 <?php
                 foreach ($eqLogics as $eqLogic) {
-                  if ($eq_id == $eqLogic->getId())
-                    echo '<option selected value="' . $eqLogic->getId() . '">"' . $eqLogic->getHumanName(true) . '"</option>';
-                  else
-                    echo '<option value="' . $eqLogic->getId() . '">"' . $eqLogic->getHumanName(true) . '"</option>';
+                  if ($eqLogic->getIsEnable()) {
+                    if ($eq_id == $eqLogic->getId())
+                      echo '<option selected value="' . $eqLogic->getId() . '">"' . $eqLogic->getHumanName(true) . '"</option>';
+                    else
+                      echo '<option value="' . $eqLogic->getId() . '">"' . $eqLogic->getHumanName(true) . '"</option>';
+                  }
                 }
                 ?>
                 </select>

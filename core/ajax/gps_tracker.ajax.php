@@ -43,16 +43,13 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
       $data_dir = "tks_".$imei_id;
     }
     else if ($tracker_type == "JCN") {
-      $jd_getposition_cmd  = $eq->getConfiguration("cmd_jc_position");
-      $data_dir = "jcn_".str_replace ('#', '', $jd_getposition_cmd);
+      $data_dir = "jcn_".$eq_id;
     }
     else if ($tracker_type == "JMT") {
-      $jd_getposition_cmd  = $eq->getConfiguration("cmd_jm_position");
-      $data_dir = "jmt_".str_replace ('#', '', $jd_getposition_cmd);
+      $data_dir = "jmt_".$eq_id;
     }
     else if ($tracker_type == "GEN") {
-      $jd_getposition_cmd  = $eq->getConfiguration("cmd_gen_position");
-      $data_dir = "gen_".str_replace ('#', '', $jd_getposition_cmd);
+      $data_dir = "gen_".$eq_id;
     }
     else if ($tracker_type == "TRC") {
       get_car_trips_gps_traccar($eq_id, $ts_start, $ts_end);
@@ -341,16 +338,13 @@ function get_car_trips_stats($eq_id)
       $data_dir = "tks_".$imei_id;
     }
     else if ($tracker_type == "JCN") {
-      $jd_getposition_cmd  = $eq->getConfiguration("cmd_jc_position");
-      $data_dir = "jcn_".str_replace ('#', '', $jd_getposition_cmd);
+      $data_dir = "jcn_".$eq_id;
     }
     else if ($tracker_type == "JMT") {
-      $jd_getposition_cmd  = $eq->getConfiguration("cmd_jm_position");
-      $data_dir = "jmt_".str_replace ('#', '', $jd_getposition_cmd);
+      $data_dir = "jmt_".$eq_id;
     }
     else if ($tracker_type == "GEN") {
-      $jd_getposition_cmd  = $eq->getConfiguration("cmd_gen_position");
-      $data_dir = "gen_".str_replace ('#', '', $jd_getposition_cmd);
+      $data_dir = "gen_".$eq_id;
     }
   }
   else {
@@ -507,13 +501,11 @@ try {
         $data_def = "tks_def.png";
       }
       else if ($tracker_type == "JCN") {
-        $jd_getposition_cmd  = $eq->getConfiguration("cmd_jc_position");
-        $data_dir = "jcn_".str_replace ('#', '', $jd_getposition_cmd);
+        $data_dir = "jcn_".$eq_id;
         $data_def = "jcn_def.png";
       }
       else if ($tracker_type == "JMT") {
-        $jd_getposition_cmd  = $eq->getConfiguration("cmd_jm_position");
-        $data_dir = "jmt_".str_replace ('#', '', $jd_getposition_cmd);
+        $data_dir = "jmt_".$eq_id;
         $data_def = "jmt_def.png";
       }
       else if ($tracker_type == "TRC") {
@@ -522,8 +514,7 @@ try {
         $data_def = "trc_def.png";
       }
       else if ($tracker_type == "GEN") {
-        $jd_getposition_cmd  = $eq->getConfiguration("cmd_gen_position");
-        $data_dir = "gen_".str_replace ('#', '', $jd_getposition_cmd);
+        $data_dir = "gen_".$eq_id;
         $data_def = "gen_def.png";
       }
     }
