@@ -16,3 +16,7 @@
 - Ajout d'un traceur générique à partir d'une info Jeedom
 - Ajout d'un traceur dans une base Traccar
 - Agrandissement de la carte dans le panel
+
+## 20/5/2022: Tag gps_trk_v0.4
+
+- Ajout d'une option pour le traceur générique (coordonnées GPS à partir de champ info jeedom différents)
