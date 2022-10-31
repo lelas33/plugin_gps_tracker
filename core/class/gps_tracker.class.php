@@ -292,9 +292,10 @@ class gps_tracker extends eqLogic {
       $distance = 6371.01 * acos(sin($lat0r)*sin($lat1r) + cos($lat0r)* cos($lat1r)*cos($lon0r - $lon1r)); // calcul de la distance
       // $dist_home = round($distance, 3);
       if (is_nan($distance)) {
-        // log::add('gps_tracker','error', $tracker_name."->Erreur sur le calcul de distance:".$dist_prev);
+        // log::add('gps_tracker','error', "->Erreur sur le calcul de distance:".$dist_prev);
         $distance = 0.0;
       }
+      // log::add('gps_tracker','debug', "distance_compute-> lat0/lon0=".$lat0."/".$lon0.", lat1/lon1=".$lat1."/".$lon1.", dist=".$distance);
       return($distance);
     }
 
@@ -420,7 +421,8 @@ class gps_tracker extends eqLogic {
       $prev_lon = floatval($gps_array[1]);
       // Distance depuis le point précédent
       $dist = $this->distance_compute ($lat, $lon, $prev_lat, $prev_lon);
-      // Gestion du deplacement
+      // log::add('gps_tracker','debug', "distance:".$dist);
+     // Gestion du deplacement
       if (($dist >= 0.050) && ($mvt_cpt < 5)) {      // 50m
         $mvt_cpt = $mvt_cpt + 1;
       }
@@ -589,6 +591,8 @@ class gps_tracker extends eqLogic {
           $fin = date("Y-m-d H:i:s", strtotime("Now")); 
           $cmdId = $jd_getposition_cmd->getId();
           $values = history::all($cmdId, $debut, $fin);
+          $nb_data_histo = count($values);
+          // log::add('gps_tracker','debug', $tracker_name."->history: nb_data_histo =".$nb_data_histo);
           $gps_position_hist = [];
           $prev_posi = $previous_gps_position;
           $current_milleage = $previous_mileage;
@@ -602,10 +606,12 @@ class gps_tracker extends eqLogic {
             $prev_posi = $posi;
             $current_milleage = $ret_gps["mlg"];
           }
-          // Capture la position courante
-          $gps_position = $jd_getposition_cmd->execCmd();
-          // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
-          $ret_gps = $this->analyse_jcn ($ctime, $gps_position, $prev_posi, $current_milleage);
+          // Capture la position courante (si pas fait par l'historique précédent)
+          if ($nb_data_histo == 0) {
+            $gps_position = $jd_getposition_cmd->execCmd();
+            $ret_gps = $this->analyse_jcn ($ctime, $gps_position, $prev_posi, $current_milleage);
+            // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position." & prev_posi: ".$prev_posi);
+          }
           $lat = $ret_gps["lat"];
           $lon = $ret_gps["lon"];
           $vitesse = $ret_gps["vit"];
@@ -746,14 +752,18 @@ class gps_tracker extends eqLogic {
               $ret_gps = $this->analyse_gen (strtotime($date), $posi, $prev_posi, $param, $current_milleage, $mvt_cpt);
               $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
               array_push($gps_position_hist, $record);
-              log::add('gps_tracker','debug', $tracker_name."->history: record ".$record);
+              if ($mvt_cpt != 0)
+                log::add('gps_tracker','debug', $tracker_name."->history: record ".$record." / mvt_cpta = ".$mvt_cpt);
               $prev_posi = $ret_gps["posi"];
               $current_milleage = $ret_gps["mlg"];
             }
             // Capture la position courante
-            $gps_position = $jd_getposition_cmd->execCmd();
+            // $gps_position = $jd_getposition_cmd->execCmd();
             // log::add('gps_tracker','debug', $tracker_name."->gps_position: ".$gps_position);
-            $ret_gps = $this->analyse_gen ($ctime, $gps_position, $prev_posi, $param, $current_milleage, $mvt_cpt);
+            // $ret_gps = $this->analyse_gen ($ctime, $gps_position, $prev_posi, $param, $current_milleage, $mvt_cpt);
+            // $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
+            // if ($mvt_cpt != 0)
+              // log::add('gps_tracker','debug', $tracker_name."->history: record ".$record." / mvt_cptb = ".$mvt_cpt);
           }
           else {
             // cas des donnes sur plusieurs champs info
@@ -797,7 +807,7 @@ class gps_tracker extends eqLogic {
               $ret_gps = $this->analyse_gen (strtotime($date), $posi, $prev_posi, $param, $current_milleage, $mvt_cpt);
               $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
               array_push($gps_position_hist, $record);
-              log::add('gps_tracker','debug', $tracker_name."->history: record ".$record);
+              log::add('gps_tracker','debug', $tracker_name."->history: record ".$record." / mvt_cpta = ".$mvt_cpt);
               $prev_posi = $ret_gps["posi"];
               $current_milleage = $ret_gps["mlg"];
               $idx++;
@@ -816,7 +826,8 @@ class gps_tracker extends eqLogic {
               if ($spd != "") $gps_position .= ",".$spd;
             }
             $ret_gps = $this->analyse_gen ($ctime, $gps_position, $prev_posi, $param, $current_milleage, $mvt_cpt);
-            
+            $record = $ret_gps["ts"].",".$ret_gps["posi"].",".$ret_gps["misc"];
+            log::add('gps_tracker','debug', $tracker_name."->history: record ".$record." / mvt_cptb = ".$mvt_cpt);
           }
 
           $lat = $ret_gps["lat"];

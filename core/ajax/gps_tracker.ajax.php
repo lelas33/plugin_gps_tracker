@@ -22,7 +22,6 @@ require_once dirname(__FILE__) . '/../../3rdparty/api_traccar.php';
 define("GPS_FILES_DIR", "/../../data/");
 
 global $cars_dt;
-global $cars_dt_gps;
 global $report;
 
 // =====================================================
@@ -79,7 +78,9 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
       $tsi_e = intval($tr_tse);
       // selectionne les trajets selon leur date depart&arrive
       if (($tsi_s>=$ts_start) && ($tsi_s<=$ts_end)) {
-        $cars_dt["trips"][$line] = $buffer;
+        $cars_dt["trips"][$line]["tss"] = $tsi_s;
+        $cars_dt["trips"][$line]["tse"] = $tsi_e;
+        $cars_dt["trips"][$line]["dst"] = $tr_ds;
         $line = $line + 1;
         // Recherche des ts mini et maxi pour les trajets retenus
         if ($tsi_s<$first_ts)
@@ -90,44 +91,102 @@ function get_car_trips_gps($eq_id, $ts_start, $ts_end)
     }
   }
   fclose($fcar);
-  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:nb_lines trips =>'.$line);
-
+  $nb_trips = $line;
+  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:Nombre de trajets => '.$nb_trips);
 
   // Lecture des points GPS pour ces trajets
   // ---------------------------------------
   // ouverture du fichier de log: points GPS
   $fn_car = dirname(__FILE__).GPS_FILES_DIR.$data_dir.'/gps.log';
   $fcar = fopen($fn_car, "r");
+  if ($fcar == "") {
+    log::add('gps_tracker', 'debug', 'Ajax:get_car_trips: Fichier de log GPS inexistant');
+    return;
+  }
 
   // lecture des donnees
-  $line = 0;
+  $fini = 0;
   $line_all = 0;
-  $cars_dt["gps"] = [];
-  if ($fcar) {
-    while (($buffer = fgets($fcar, 4096)) !== false) {
-      // extrait les timestamps debut et fin du trajet
-      $tmp=explode(",", $buffer);
-      if (count($tmp) == 7) {
-        list($pts_ts, $pts_lat, $pts_lon, $pts_alt, $pts_speed, $pts_mlg, $pts_moving) = $tmp;
-        $pts_tsi = intval($pts_ts);
-        // selectionne les trajets selon leur date depart&arrive
-        if (($pts_tsi>=$first_ts) && ($pts_tsi<=$last_ts)) {
-          $cars_dt["gps"][$line] = $buffer;
-          $line = $line + 1;
+  $num_trip = 0;
+  $trip_num = 0;
+  $tss = $cars_dt["trips"][$trip_num]["tss"];
+  $tse = $cars_dt["trips"][$trip_num]["tse"];
+  $found_pts = false;
+  $nb_pts = 0;
+  $num_pts_trip = 0;
+  $pts_moving_mean_sum = 0;
+  $trip_dist = 0;
+  $prev_pts_lat = 0;
+  $prev_pts_lon = 0;
+  
+  while ((($buffer = fgets($fcar, 4096)) !== false) && ($fini == 0)) {
+    // extrait les timestamps debut et fin du trajet
+    $tmp = explode(",", $buffer);
+    if (count($tmp) == 7) {
+      list($pts_ts, $pts_lat, $pts_lon, $pts_alt, $pts_speed, $pts_mlg, $pts_moving) = $tmp;
+      $pts_tsi = intval($pts_ts);
+      
+      // selectionne les points du trajets selon leur timestamp
+      if (($pts_tsi>=$tss) && ($pts_tsi<=$tse)) {
+        $tmp[5] = $trip_dist;
+        $cars_dt["trips"][$trip_num]["pts"][$num_pts_trip] = implode(",", $tmp);
+        if (intval($pts_moving) > 0)
+          $pts_moving_mean_sum += intval($pts_moving);
+        $nb_pts = $nb_pts + 1;
+        $num_pts_trip++;
+        if ($prev_pts_lat == 0)
+          $trip_dist = 0;
+        else
+          $trip_dist += gps_tracker::distance_compute (floatval($pts_lat), floatval($pts_lon), $prev_pts_lat, $prev_pts_lon);
+        $prev_pts_lat = floatval($pts_lat);
+        $prev_pts_lon = floatval($pts_lon);
+        $found_pts = true;
+      }
+      else if ($found_pts == true) {
+        // Finalise le type du trajet precedent
+        $cars_dt["trips"][$trip_num]["type"] = round($pts_moving_mean_sum / $num_pts_trip);
+        $pts_moving_mean_sum = 0;
+        $cars_dt["trips"][$trip_num]["dst2"] = $trip_dist;
+        // log::add('gps_tracker', 'debug', 'Ajax:get_car_trips: trip_dist:'.$trip_dist);
+        $trip_dist = 0;
+        $prev_pts_lat = 0;
+        
+        // Passage au trajet suivant
+        $trip_num++;
+        if ($trip_num < $nb_trips) {
+          // log::add('gps_tracker', 'debug', 'Ajax:get_car_trips: dgb_trip_num:'.$trip_num);
+          $tss = $cars_dt["trips"][$trip_num]["tss"];
+          $tse = $cars_dt["trips"][$trip_num]["tse"];
+          $num_pts_trip = 0;
+          $found_pts = false;
+        }
+        else {
+          $fini = 1;  // tous les trajets ont ete trouves
         }
       }
-      else {
-        log::add('gps_tracker', 'error', 'Ajax:get_car_trips: Erreur dans le fichier gps.log, à la ligne:'.$line_all);
-      }
-      $line_all = $line_all + 1;
+    }
+    else {
+      log::add('gps_tracker', 'error', 'Ajax:get_car_trips: Erreur dans le fichier gps.log, à la ligne:'.$line_all);
+    }
+    $line_all = $line_all + 1;
+    
+  }
+
+  // Finalise le type du dernier trajet
+  // log::add('gps_tracker', 'debug', 'Ajax:get_car_trips: trip_num:'.$trip_num);
+  if ($nb_trips != 0) {
+    if (!isset($cars_dt["trips"][$nb_trips-1]["type"])) {
+      $cars_dt["trips"][$nb_trips-1]["type"] = round($pts_moving_mean_sum / $num_pts_trip);
+      $cars_dt["trips"][$nb_trips-1]["dst2"] = $trip_dist;
     }
   }
+
   fclose($fcar);
   // Ajoute les coordonnées du domicile pour utilisation par javascript
   $latitute=config::byKey("info::latitude");
   $longitude=config::byKey("info::longitude");
   $cars_dt["home"] = $latitute.",".$longitude;
-  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:nb_lines points=>'.$line);
+  // log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:Nombre de points GPS=> '.$nb_pts);
   return;
 }
 
@@ -141,8 +200,8 @@ function get_car_trips_gps_traccar($eq_id, $ts_start, $ts_end)
 
   $iso8601_st = date('Y-m-d\TH:i:s\Z', $ts_start);
   $iso8601_en = date('Y-m-d\TH:i:s\Z', $ts_end);
-  // log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:iso8601_st=>'.$iso8601_st);
-  // log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:iso8601_en=>'.$iso8601_en);
+  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:iso8601_st=>'.$iso8601_st);
+  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:iso8601_en=>'.$iso8601_en);
   $eq = eqLogic::byId(intval($eq_id));
   if ($eq->getIsEnable()) {
       $trc_url      = $eq->getConfiguration("trc_url");
@@ -164,17 +223,19 @@ function get_car_trips_gps_traccar($eq_id, $ts_start, $ts_end)
   $nb_trips = count($res);
   for ($i=0; $i<$nb_trips; $i++) {
     $cars_dt["trips"][$i] = $res[$i];
-  }
-  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:nb_lines trips =>'.$nb_trips);
+    $iso8601_trip_st = date('Y-m-d\TH:i:s\Z', intval($res[$i]["tss"])-3600*2);
+    $iso8601_trip_en = date('Y-m-d\TH:i:s\Z', intval($res[$i]["tse"])-3600*2);
+    log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:iso8601_trip_st =>'.$iso8601_trip_st);
+    log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:iso8601_trip_en =>'.$iso8601_trip_en);
 
-  // lecture des positions GPS depuis la base traccar
-  $cars_dt["gps"] = [];
-  $res = $session_traccar->traccar_get_route($trc_id, $iso8601_st, $iso8601_en);
-  $nb_pts = count($res);
-  for ($i=0; $i<$nb_pts; $i++) {
-    $cars_dt["gps"][$i] = $res[$i];
+    // lecture des positions GPS depuis la base traccar
+    $trip = $session_traccar->traccar_get_route($trc_id, $iso8601_trip_st, $iso8601_trip_en);
+    $nb_pts = count($trip);
+    for ($pts=0; $pts<$nb_pts; $pts++) {
+      $cars_dt["trips"][$i]["pts"][$pts] = $trip[$pts];
+    }
+    log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:nb_pts for trip =>'.$nb_pts);
   }
-  log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:nb_lines trips =>'.$nb_pts);
 
   // Ajoute les coordonnées du domicile pour utilisation par javascript
   $latitute=config::byKey("info::latitude");

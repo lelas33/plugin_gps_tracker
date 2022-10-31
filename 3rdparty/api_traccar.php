@@ -182,7 +182,11 @@ class api_traccar {
        $ts_start = strtotime($ts_start);
        $ts_end   = strtotime($ts_end);
        $distance = round(floatval($distance)/1000, 1);
-       $buff = $ts_start.','.$ts_end.','.$distance;
+       $buff=[];
+       $buff["tss"] = $ts_start;
+       $buff["tse"] = $ts_end;
+       $buff["dst"] = $distance;
+       $buff["type"] = 4;  // type trajet voiture
        $res[$i] = $buff;
      }
    }

@@ -20,7 +20,6 @@ $(".in_datepicker").datepicker();
 
 // Variables partagées
 var car_trips = [];
-var car_gps   = [];
 var sel_trip_pts = [];
 var sel_trip_dist = [];
 var sel_trip_alt = [];
@@ -155,17 +154,15 @@ function loadData(){
                 return;
             }
             car_dt = JSON.parse(data.result);
-            //alert("getLogData:data nb="+nb_dt);
+            // alert("getLogData:data "+data.result);
             // recopie les donnees recues (trajets et points GPS)
             car_trips = [];
-            for (p=0; p<car_dt.trips.length; p++) {
-              car_trips[p] = car_dt.trips[p];
+            // console.log("car_dt.trips.length="+car_dt.trips.length);
+            if (car_dt.trips !== undefined) {
+              for (p=0; p<car_dt.trips.length; p++) {
+                car_trips[p] = car_dt.trips[p];
+              }
             }
-            car_gps = [];
-            for (p=0; p<car_dt.gps.length; p++) {
-              car_gps[p] = car_dt.gps[p];
-            }
-            //alert("Nb trajet:"+car_trips.length+" / nb points GPS:"+car_gps.length);
             stat_usage ();
             trip_list ();
             // coordonnees domicile
@@ -189,32 +186,42 @@ function stat_usage () {
   var trips_total_distance = 0;
   var trip_ts_first = Date.now()/1000;
   var trip_ts_last  = 0;
+  var cpt_trips_number = 0;
+
+  // Etat des boutons de choix d'affichage des type de trajets
+  var options_type_trajet = cb_get_type_trajet_value();
 
   trips_number = car_trips.length;
+  console.log("stat:trips_number="+trips_number);
   if (trips_number <1) {
     $("#trips_info").empty();
     $("#trips_info").append("Pas de données");
     return;
   }
  
+  var option_distance = cb_get_recompute_distance();
+ 
   // analyse des données
   for (i=0; i<trips_number; i++) {
-    tmp = car_trips[i].split(',');
-    trip_ts_sta = parseInt  (tmp[0],10);  // trip Timestamp start
-    trip_ts_end = parseInt  (tmp[1],10);  // trip Timestamp end
-    trip_dist   = parseFloat(tmp[2]);     // trip distance
-
-    // gestion date premier et dernier trajet
-    if (trip_ts_sta < trip_ts_first)
-      trip_ts_first = trip_ts_sta;
-    if (trip_ts_sta > trip_ts_last)
-      trip_ts_last = trip_ts_sta;
-    trip_dur = trip_ts_end - trip_ts_sta;
-    trips_total_distance += trip_dist;
-    trips_total_duration += trip_dur;
-
+    trip_ts_sta = parseInt  (car_trips[i].tss,10);  // trip Timestamp start
+    trip_ts_end = parseInt  (car_trips[i].tse,10);  // trip Timestamp end
+    trip_dist   = option_distance?parseFloat(car_trips[i].dst2):parseFloat(car_trips[i].dst);    // trip distance
+    trip_type   = parseInt  (car_trips[i].type);    // trip type
+    
+    if (options_type_trajet[(trip_type-1)&0x3]) {
+      cpt_trips_number++;
+      // gestion date premier et dernier trajet
+      if (trip_ts_sta < trip_ts_first)
+        trip_ts_first = trip_ts_sta;
+      if (trip_ts_sta > trip_ts_last)
+        trip_ts_last = trip_ts_sta;
+      trip_dur = trip_ts_end - trip_ts_sta;
+      trips_total_distance += trip_dist;
+      trips_total_duration += trip_dur;
+    }
   }
   // Autres calculs
+  // console.log("stat:trips_total_durationb="+trips_total_duration);
   var dur_h = Math.floor(trips_total_duration / 3600);
   var dur_m = Math.round((trips_total_duration - 3600*dur_h)/60);
   var total_distance =  Math.round(trips_total_distance*10.0)/10.0;
@@ -224,7 +231,7 @@ function stat_usage () {
   
   // Affichage des résultats dans le DIV:"trips_info"
   $("#trips_info").empty();
-  $("#trips_info").append("Nombre de trajets: "+trips_number+"  (du "+DAY_NAME[ts_first.getDay()]+" "+ts_first.toLocaleDateString()+" au "+DAY_NAME[ts_last.getDay()]+" "+ts_last.toLocaleDateString()+")<br>");
+  $("#trips_info").append("Nombre de trajets: "+cpt_trips_number+"  (du "+DAY_NAME[ts_first.getDay()]+" "+ts_first.toLocaleDateString()+" au "+DAY_NAME[ts_last.getDay()]+" "+ts_last.toLocaleDateString()+")<br>");
   $("#trips_info").append("Distance totale: "+total_distance+" kms<br>");
   $("#trips_info").append("Temps de trajet global: "+dur_h+" h "+dur_m+" mn<br>");
   $("#trips_info").append("Vitesse moyenne sur ces trajets: "+vit_moyenne+" km/h<br>");
@@ -232,11 +239,14 @@ function stat_usage () {
 }
 
 // Liste des trajets du vehicule sur la période
-// et affichage dans le div #div_hist_liste2
-// ============================================
+// et affichage en tableau dans le div #div_hist_liste2
+// ====================================================
 function trip_list () {
   var trips_number = 0;
 
+  // Etat des boutons de choix d'affichage des type de trajets
+  var options_type_trajet = cb_get_type_trajet_value();
+  
   // Effacement de la table en cours si existante
   if ($.fn.DataTable.isDataTable('#trip_liste')) {
     table_trips.destroy();
@@ -261,14 +271,16 @@ function trip_list () {
   // Affichage des résultats dans le DIV:"div_hist_liste"
   $("#div_hist_liste").empty();
   $("#div_graph_alti").empty();
+  
+  var option_distance = cb_get_recompute_distance();
 
   // analyse des données pour la création de la table
   var dataSet = [];
   for (i=0; i<trips_number; i++) {
-    tmp = car_trips[i].split(',');
-    trip_ts_sta = parseInt  (tmp[0],10);  // trip Timestamp start
-    trip_ts_end = parseInt  (tmp[1],10);  // trip Timestamp end
-    trip_dist   = parseFloat(tmp[2]);     // trip distance
+    trip_ts_sta = parseInt  (car_trips[i].tss,10);  // trip Timestamp start
+    trip_ts_end = parseInt  (car_trips[i].tse,10);  // trip Timestamp end
+    trip_dist   = option_distance?parseFloat(car_trips[i].dst2):parseFloat(car_trips[i].dst);    // trip distance
+    trip_type   = parseInt  (car_trips[i].type);    // trip type
 
     var date_ob = new Date(trip_ts_sta*1000);                 // initialize new Date object
     var year = date_ob.getFullYear();                         // year as 4 digits (YYYY)
@@ -285,9 +297,14 @@ function trip_list () {
     distance = Math.round(trip_dist*10.0)/10.0;
     vitesse = 3600.0 * distance / duree;
     vitesse = Math.round(vitesse*10.0)/10.0;
-    line = [date_heure_str, duree_str, distance, vitesse];
-    dataSet.push(line);
-
+    if      (trip_type == 1) { type_trajet = 'Marche';   id_type_trajet = 0; }
+    else if (trip_type == 2) { type_trajet = 'Course';   id_type_trajet = 1; }
+    else if (trip_type == 3) { type_trajet = 'Vélo';     id_type_trajet = 2; }
+    else if (trip_type == 4) { type_trajet = 'Voiture';  id_type_trajet = 3; }
+    else                     { type_trajet = '--';       id_type_trajet = 3; }
+    line = [date_heure_str, duree_str, distance, vitesse, type_trajet];
+    if (options_type_trajet[id_type_trajet])
+      dataSet.push(line);
   }
   //$('#div_hist_liste2').style.display = "block";
   var x = document.getElementById("div_hist_liste2");
@@ -304,8 +321,9 @@ function trip_list () {
       columns: [
           { title: "Date / Heure" },
           { title: "Durée" },
-          { title: "Distance (km)" },
-          { title: "Vitesse moy.\n(km/h)" }
+          { title: "Distance\n(km)" },
+          { title: "Vitesse moy.\n(km/h)" },
+          { title: "Type\ntrajet" }
       ]
   } );
   
@@ -317,7 +335,6 @@ function trip_list () {
       marker_speed = null;
     }
 
-    
     if ($(this).hasClass('selected')) {
       $(this).removeClass('selected');
       display_trips(-1);
@@ -374,6 +391,38 @@ $('#btgps_per_all').on('click',function(){
   $('#gps_endDate').datepicker( "setDate", "+1" );
   loadData();
 });
+
+
+// gestion des check buttons : Type de trajets
+// ===========================================
+var cb_marche = document.querySelector('#cb_marche');
+var cb_course = document.querySelector('#cb_course');
+var cb_velo   = document.querySelector('#cb_velo');
+var cb_voiture= document.querySelector('#cb_voiture');
+var cb_option_dist= document.querySelector('#cb_option_dist');
+
+cb_marche.addEventListener('change', update_trips_list);
+cb_course.addEventListener('change', update_trips_list);
+cb_velo.addEventListener('change', update_trips_list);
+cb_voiture.addEventListener('change', update_trips_list);
+cb_option_dist.addEventListener('change', update_trips_list);
+
+function update_trips_list(e) {
+  // Mise a jour des trajets (stat, table et carte)
+  stat_usage ();
+  trip_list ();
+  display_trips(-1);
+}
+
+function cb_get_type_trajet_value() {
+  var type_trajet = [cb_marche.checked, cb_course.checked, cb_velo.checked, cb_voiture.checked];
+  return type_trajet;
+}
+
+function cb_get_recompute_distance() {
+  return cb_option_dist.checked;
+}
+
 
 // Gestion photo de l'objet suivi
 // ==============================
@@ -433,6 +482,11 @@ function initMap(home_lat, home_lon) {
 // parametre number: -1 => Affiche tous les trajets, numéro => Affiche uniquement ce trajet
 function display_trips(number) {
 
+  var cpt_trips_nb = 0;
+
+  // Etat des boutons de choix d'affichage des type de trajets
+  var options_type_trajet = cb_get_type_trajet_value();
+
   // Suppression des trajets existants s'il y en a
   if (trip_polyline.length > 0) {
     for (i=0;i<trip_polyline.length;i++) {
@@ -446,8 +500,8 @@ function display_trips(number) {
   }
   trips_nb = car_trips.length;
   console.log('car_trips length:'+trips_nb);
-  gps_nb   = car_gps.length;
-  if ((trips_nb == 0) || (gps_nb == 0) || (number>=trips_nb)) {
+  
+  if ((trips_nb == 0) || (number>=trips_nb)) {
     return;
   }
   // generation des objets marqueurs pour les trajets selectionnes
@@ -460,27 +514,29 @@ function display_trips(number) {
   var sum_alt, sum_spd;
   for (trip_id=0; trip_id<trips_nb; trip_id++) {
     // extract trip infos
-    tmp = car_trips[trip_id].split(',');
-    trip_ts_sta   = parseInt  (tmp[0],10);  // trip Timestamp start
-    trip_ts_end   = parseInt  (tmp[1],10);  // trip Timestamp end
-    trip_distance = parseFloat(tmp[2]);     // trip distance
-    trip = [];
-    trip_alt = [];
-    trip_spd = [];
-    trip_dist = [];
-    sum_alt = 0;
-    sum_spd = 0;
-    for (pts=0; pts<gps_nb; pts++) {
-      // extract gps pts infos
-      tmp = car_gps[pts].split(',');
-      pts_ts   = parseInt  (tmp[0],10);  // Timestamp
-      pts_lat  = parseFloat(tmp[1]);     // Lat
-      pts_lon  = parseFloat(tmp[2]);     // Lon
-      pts_alt  = parseFloat(tmp[3]);     // vitesse
-      pts_spd  = parseFloat(tmp[4]);     // vitesse
-      mileage  = parseFloat(tmp[5]);     // mileage
-      moving   = parseInt(tmp[6],10);    // kinetic
-      if ((pts_ts>=trip_ts_sta) && (pts_ts<=trip_ts_end)) {
+    trip_ts_sta   = parseInt  (car_trips[trip_id].tss,10);  // trip Timestamp start
+    trip_ts_end   = parseInt  (car_trips[trip_id].tse,10);  // trip Timestamp end
+    trip_distance = parseFloat(car_trips[trip_id].dst);     // trip distance
+    trip_type     = parseInt  (car_trips[trip_id].type);    // trip type
+    if (options_type_trajet[(trip_type-1)&0x3]) {
+      trip = [];
+      trip_alt = [];
+      trip_spd = [];
+      trip_dist = [];
+      sum_alt = 0;
+      sum_spd = 0;
+      cpt_trips_nb++;
+      // console.log('car_trip num :' + trip_id + ', Nombre de points GPS:'+car_trips[trip_id].pts.length + ', type du trajet:' + trip_type);
+      for (pts=0; pts<car_trips[trip_id].pts.length; pts++) {
+        // extract gps pts infos
+        tmp = car_trips[trip_id].pts[pts].split(',');
+        pts_ts   = parseInt  (tmp[0],10);  // Timestamp
+        pts_lat  = parseFloat(tmp[1]);     // Lat
+        pts_lon  = parseFloat(tmp[2]);     // Lon
+        pts_alt  = parseFloat(tmp[3]);     // altitude
+        pts_spd  = parseFloat(tmp[4]);     // vitesse
+        mileage  = parseFloat(tmp[5]);     // mileage
+        moving   = parseInt(tmp[6],10);    // kinetic
         trip.push([pts_lat, pts_lon]);
         trip_alt.push(pts_alt);
         trip_spd.push(pts_spd);
@@ -488,20 +544,21 @@ function display_trips(number) {
         sum_alt += pts_alt;
         sum_spd += pts_spd;
       }
-    }
-    if ((number == -1) || (number == trip_id))
-      trip_table.push(trip);
-    if (((number == -1)&&(trip_id==0)) || (number == trip_id)) {
-      sel_trip_alt = (sum_alt >0)? trip_alt:[];
-      sel_trip_spd = (sum_spd >0)? trip_spd:[];
-      sel_trip_dist = trip_dist;
-      sel_trip_pts  = trip;
+      if ((number == -1) || (number == cpt_trips_nb-1))
+        trip_table.push(trip);
+      if (((number == -1)&&(trip_id==0)) || (number == cpt_trips_nb-1)) {
+        sel_trip_alt = (sum_alt >0)? trip_alt:[];
+        sel_trip_spd = (sum_spd >0)? trip_spd:[];
+        sel_trip_dist = trip_dist;
+        sel_trip_pts  = trip;
+      }
     }
   }
+  console.log('Nombre de trajets selectionnes:'+cpt_trips_nb);
 
   // affichage des trajets
   if (number == -1) {
-    for (trip_id=0; trip_id<trips_nb; trip_id++) {
+    for (trip_id=0; trip_id<cpt_trips_nb; trip_id++) {
       trip_polyline[trip_id] = L.polyline(trip_table[trip_id], {color: TRIPS_COLOR_NAMES[trip_id%NB_TRIPS_COLORS], weight: 5, smoothFactor: 1}).addTo(gps_macarte);
     }
   }

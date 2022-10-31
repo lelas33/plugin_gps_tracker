@@ -92,7 +92,7 @@ if (is_object($cmd_mlg)) {
                 </select>
               </div>
               <div class="pull-right" style="min-height: 30px;">
-                <img id="voiture_img" src=<?php echo $img_path; ?> style="max-height:250px;max-width:350px;height:auto;width:auto;" />
+                <img id="voiture_img" src=<?php echo $img_path; ?> style="max-height:200px;max-width:350px;height:auto;width:auto;" />
               </div>
             </fieldset>
         </div>
@@ -152,7 +152,24 @@ if (is_object($cmd_mlg)) {
                            </div>
                            <div id='trips_info' style="font-size: 1.2em;"></div>
                            <div style="v"></div>
-                       </br>
+                       </fieldset>
+                       <div style="min-height: 10px;"></div>
+                   </form>
+              </div>
+              <div class="col-lg-10 col-lg-offset-1">
+                  <form class="form-horizontal">
+                       <fieldset style="border: 1px solid #e5e5e5; border-radius: 5px 5px 5px 5px;background-color:#f8f8f8">
+                           <div style="padding-top:10px;padding-left:24px;padding-bottom:10px;color: #333;font-size: 1.5em;">
+                               <i style="font-size: initial;"></i> {{Barre d'outils:}}
+                           </div>
+                           <div class="pull-right" style="font-size: 1.0em;">
+                             <input type="checkbox" id="cb_option_dist"  name="option_trajet" checked><label for="cb_option_dist">Re-calcul Distances &nbsp </label>
+                             <input type="checkbox" id="cb_marche"  name="type_trajet" checked><label for="cb_marche">Marche &nbsp </label>
+                             <input type="checkbox" id="cb_course"  name="type_trajet" checked><label for="cb_course">Course &nbsp </label>
+                             <input type="checkbox" id="cb_velo"    name="type_trajet" checked><label for="cb_velo">Vélo &nbsp </label>
+                             <input type="checkbox" id="cb_voiture" name="type_trajet" checked><label for="cb_voiture">Voiture &nbsp </label>
+                           </div>
+                           
                        </fieldset>
                        <div style="min-height: 10px;"></div>
                    </form>
