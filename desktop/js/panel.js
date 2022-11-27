@@ -154,7 +154,7 @@ function loadData(){
                 return;
             }
             car_dt = JSON.parse(data.result);
-            // alert("getLogData:data "+data.result);
+            console.log("getLogData:data "+data.result);
             // recopie les donnees recues (trajets et points GPS)
             car_trips = [];
             // console.log("car_dt.trips.length="+car_dt.trips.length);
@@ -526,23 +526,25 @@ function display_trips(number) {
       sum_alt = 0;
       sum_spd = 0;
       cpt_trips_nb++;
-      // console.log('car_trip num :' + trip_id + ', Nombre de points GPS:'+car_trips[trip_id].pts.length + ', type du trajet:' + trip_type);
-      for (pts=0; pts<car_trips[trip_id].pts.length; pts++) {
-        // extract gps pts infos
-        tmp = car_trips[trip_id].pts[pts].split(',');
-        pts_ts   = parseInt  (tmp[0],10);  // Timestamp
-        pts_lat  = parseFloat(tmp[1]);     // Lat
-        pts_lon  = parseFloat(tmp[2]);     // Lon
-        pts_alt  = parseFloat(tmp[3]);     // altitude
-        pts_spd  = parseFloat(tmp[4]);     // vitesse
-        mileage  = parseFloat(tmp[5]);     // mileage
-        moving   = parseInt(tmp[6],10);    // kinetic
-        trip.push([pts_lat, pts_lon]);
-        trip_alt.push(pts_alt);
-        trip_spd.push(pts_spd);
-        trip_dist.push(mileage);
-        sum_alt += pts_alt;
-        sum_spd += pts_spd;
+      if (typeof car_trips[trip_id].pts !== 'undefined') {
+        console.log('car_trip num :' + trip_id + ', Nombre de points GPS:'+car_trips[trip_id].pts.length + ', type du trajet:' + trip_type);
+        for (pts=0; pts<car_trips[trip_id].pts.length; pts++) {
+          // extract gps pts infos
+          tmp = car_trips[trip_id].pts[pts].split(',');
+          pts_ts   = parseInt  (tmp[0],10);  // Timestamp
+          pts_lat  = parseFloat(tmp[1]);     // Lat
+          pts_lon  = parseFloat(tmp[2]);     // Lon
+          pts_alt  = parseFloat(tmp[3]);     // altitude
+          pts_spd  = parseFloat(tmp[4]);     // vitesse
+          mileage  = parseFloat(tmp[5]);     // mileage
+          moving   = parseInt(tmp[6],10);    // kinetic
+          trip.push([pts_lat, pts_lon]);
+          trip_alt.push(pts_alt);
+          trip_spd.push(pts_spd);
+          trip_dist.push(mileage);
+          sum_alt += pts_alt;
+          sum_spd += pts_spd;
+        }
       }
       if ((number == -1) || (number == cpt_trips_nb-1))
         trip_table.push(trip);

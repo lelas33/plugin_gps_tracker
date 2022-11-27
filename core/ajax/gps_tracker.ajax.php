@@ -223,8 +223,14 @@ function get_car_trips_gps_traccar($eq_id, $ts_start, $ts_end)
   $nb_trips = count($res);
   for ($i=0; $i<$nb_trips; $i++) {
     $cars_dt["trips"][$i] = $res[$i];
-    $iso8601_trip_st = date('Y-m-d\TH:i:s\Z', intval($res[$i]["tss"])-3600*2);
-    $iso8601_trip_en = date('Y-m-d\TH:i:s\Z', intval($res[$i]["tse"])-3600*2);
+    // $iso8601_trip_st = date('Y-m-d\TH:i:s\Z', intval($res[$i]["tss"])-3600*1);
+    // $iso8601_trip_en = date('Y-m-d\TH:i:s\Z', intval($res[$i]["tse"])-3600*1);
+    $tss_date = intval($res[$i]["tss"])-3600;
+    $tse_date = intval($res[$i]["tse"])-3600;
+    $heure_ete = intval(3600*(date('I', $tss_date)));
+    $iso8601_trip_st = date('Y-m-d\TH:i:s\Z', $tss_date-$heure_ete);
+    $iso8601_trip_en = date('Y-m-d\TH:i:s\Z', $tse_date-$heure_ete);
+    log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:heure_ete =>'.$heure_ete);
     log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:iso8601_trip_st =>'.$iso8601_trip_st);
     log::add('gps_tracker', 'debug', 'Ajax:get_car_trips:iso8601_trip_en =>'.$iso8601_trip_en);
 

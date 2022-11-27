@@ -163,7 +163,7 @@ if (is_object($cmd_mlg)) {
                                <i style="font-size: initial;"></i> {{Barre d'outils:}}
                            </div>
                            <div class="pull-right" style="font-size: 1.0em;">
-                             <input type="checkbox" id="cb_option_dist"  name="option_trajet" checked><label for="cb_option_dist">Re-calcul Distances &nbsp </label>
+                             <input type="checkbox" id="cb_option_dist"  name="option_trajet"><label for="cb_option_dist">Re-calcul Distances &nbsp </label>
                              <input type="checkbox" id="cb_marche"  name="type_trajet" checked><label for="cb_marche">Marche &nbsp </label>
                              <input type="checkbox" id="cb_course"  name="type_trajet" checked><label for="cb_course">Course &nbsp </label>
                              <input type="checkbox" id="cb_velo"    name="type_trajet" checked><label for="cb_velo">Vélo &nbsp </label>
